@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.1.html#Next">Previous: Section 8.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.3.html#prev">Next: Section 8.3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-8.2">8.2</a> Dependency Injection<a class="Label" name="sec:Dependency-Injection"> </a>
+</h2>
+<div class="Standard">
+Dependency injection is an important topic in the Java world. It’s important because Java lacks certain basic features (e.g., functions) that tend to bind abstract interfaces to concrete implementations. Basically, it’s so much easier to do <tt>MyInterface thing = new MyInterfaceImpl()</tt>, so most developers do just that. 
+</div>
+<div class="Standard">
+Scala’s <a class="URL" href="http://scala.sygneca.com/patterns/component-mixins">cake pattern</a> goes a long way to help developers compose complex behaviors by combining Scala traits. Jonas Bonér wrote an excellent piece on <a class="URL" href="http://jonasboner.com/2008/10/06/real-world-scala-dependency-injection-di.html">Dependency Injection</a>.
+</div>
+<div class="Standard">
+The cake pattern only goes half way to giving a Java developer complete dependency injection functionality. The cake pattern allows you to compose the complex classes out of Scala traits, but the cake pattern is less helpful in terms of allowing you to make dynamic choices about which combination of cake to vend in a given situation. Lift provides extra features that complete the dependency injection puzzle. 
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.2.1">8.2.1</a> Lift Libraries and Injector
+</h3>
+<div class="Standard">
+Lift is both a web framework and a set of Scala libraries. Lift’s <tt>common</tt>, <tt>actor</tt>, <tt>json</tt>, and <tt>util</tt> packages provide common libraries for Scala developers to build their application. Lift’s libraries are well tested, widely used, well supported, and released on a well defined schedule (montly milestones, quarterly releases). 
+</div>
+<div class="Standard">
+Lift’s <tt>Injector</tt> trait forms the basis of dependency injection: 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">/** 
+ * A trait that does basic dependency injection.
+ */
+trait Injector {
+  implicit def inject[T](implicit man: Manifest[T]): Box[T]
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+You can use this trait as follows: 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object MyInjector extends Injector {...}
+​
+val myThing: Box[Thing] = MyInjector.inject
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The reason that the instance of <tt>MyThing</tt> is in a <tt>Box</tt> is because we’re not guaranteed that <tt>MyInjector</tt> knows how to create an instance of <tt>Thing</tt>. Lift provides an implementation of <tt>Injector</tt> called <tt>SimpleInjector</tt> that allows you to register (and re-register) functions for injection:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object MyInjector extends SimpleInjector
+​
+def buildOne(): Thing = if (testMode) new Thing with TestThingy {} else new Thing with RuntimeThingy {}
+​
+MyInjector.registerInjection(buildOne _) // register the function that builds Thing 
+​
+val myThing: Box[Thing] = MyInjector.inject
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This isn’t bad... it allows us to define a function that makes the injection-time decision, and we can change the function out during runtime (or test-time.) However, there are two problems: getting Boxes for each injection is less than optimal. Further, globally scoped functions mean you have to put a whole bunch of logic (test vs. production vs. xxx) into the function. <tt>SimpleInjector</tt> has lots of ways to help out.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object MyInjector extends SimpleInjector {
+  val thing = new Inject(buildOne _) {} // define a thing, has to be a val so it’s eagerly evaluated and registered
+}
+​
+def buildOne(): Thing = if (testMode) new Thing with TestThingy {} else new Thing with RuntimeThingy {} 
+​
+val myThingBox: Box[Thing] = MyInjector.injectval 
+​
+myThing = MyInjector.thing.vend // vend an instance of Thing 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+<tt>Inject</tt> has a futher trick up its sleave... with <tt>Inject</tt>, you can scope the function... this is helpful for testing and if you need to change behavior for a particular call scope:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">MyInjector.thing.doWith(new Thing with SpecialThing {}) { 
+  val t = MyInjector.thing.vend // an instance of SpecialThing 
+  val bt: Box[Thing] = MyInjector.inject // Full(SpecialThing) 
+}
+​
+MyInjector.thing.default.set(() =&gt; new Thing with YetAnotherThing {}) // set the global scope 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Within the scope of the <tt>doWith</tt> call, <tt>MyInjector.thing</tt> will vend instances of <tt>SpecialThing</tt>. This is useful for testing as well as changing behavior within the scope of the call or globally. This gives us much of the functionality we get with dependency injection packages for Java. But within Lift WebKit, it gets better.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.2.2">8.2.2</a> Lift WebKit and enhanced injection scoping 
+</h3>
+<div class="Standard">
+Lift’s WebKit offers broad ranging tools for handling HTTP requests as well as HTML manipulation.
+</div>
+<div class="Standard">
+Lift WebKit’s <tt>Factory</tt> extends <tt>SimpleInjector</tt>, but adds the ability to scope the function based on current HTTP request or the current container session:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object MyInjector extends Factory { 
+  val thing = new FactoryMaker(buildOne _) {} // define a thing, has to be a val so it’s eagerly 
+                                              // evaluated and registered
+} 
+​
+MyInjector.thing.session.set(new Thing with ThingForSession {}) // set the instance that will be vended 
+                                                                // for the duration of the session 
+​
+MyInjector.thing.request.set(new Thing with ThingForRequest {}) // set the instance that will be vended 
+                                                                // for the duration of the request
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+WebKit’s <tt>LiftRules</tt> is a <tt>Factory</tt> and many of the properties that <tt>LiftRules</tt> contains are <tt>FactoryMakers</tt>. This means that you can change behavior during call scope (useful for testing):
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">LiftRules.convertToEntity.doWith(true) { ... test that we convert certain characters to entities} 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Or based on the current request (for example you can change the rules for calculating the docType during the current request):
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">if (isMobileReqest) LiftRules.docType.request.set((r: Req) =&gt; Full(DocType.xhtmlMobile))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Or based on the current session (for example, changing maxConcurrentRequests based on some rules when a session is created):
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">if (browserIsSomethingElse) LiftRules.maxConcurrentRequests.session.set((r: Req) =&gt; 32) 
+              // for this session, we allow 32 concurrent requests 
+</pre>
+</div>
+
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.2.3">8.2.3</a> Conclusion 
+</h3>
+<div class="Standard">
+Lift’s <tt>SimpleInjector</tt>/<tt>Factory</tt> facilities provide a powerful and flexible mechanism for vending instances based on a global function, call stack scoping, request and session scoping and provides more flexible features than most Java-based dependency injection frameworks without resorting to XML for configuration or byte-code rewriting magic.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.1.html#Next">Previous: Section 8.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.3.html#prev">Next: Section 8.3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

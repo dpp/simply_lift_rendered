@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-2.html#Next">Previous: Chapter 2</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.2.html#prev">Next: Section 2.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-2.1">2.1</a> The View
+</h2>
+<div class="Standard">
+When writing a Lift app, it’s often best to start off with the user interface... build what the user will see and then add behavior to the HTML page. So, let’s look at the Lift template that will make up our chat application.
+</div>
+<div class="Standard">
+
+</div>
+<div class="listing">
+<div class="caption">
+index.html
+</div>
+<pre class="listing brush: xml">&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+&lt;html xmlns="http://www.w3.org/1999/xhtml">
+  &lt;head>&lt;title>Home&lt;/title>&lt;/head>
+  &lt;body class="lift:content_id=main">
+    &lt;div id="main" class="lift:surround?with=default;at=content">
+      &lt;!-- the behavior of the div -->
+      &lt;div class="lift:comet?type=Chat"> 
+        Some chat messages
+        &lt;ul>
+          &lt;li>A message&lt;/li>
+          &lt;li class="clearable">Another message&lt;/li>
+          &lt;li class="clearable">A third message&lt;/li>
+        &lt;/ul>
+      &lt;/div>
+      
+      &lt;div>
+        &lt;form class="lift:form.ajax">
+          &lt;input class="lift:ChatIn" id="chat_in"/>
+          &lt;input type="submit" value="Say Something"/>
+        &lt;/form>
+      &lt;/div>
+    &lt;/div>
+  &lt;/body>
+&lt;/html>
+​
+</pre>
+</div>
+<div class="Standard">
+It’s a valid HTML page, but there are some hinky looking class attributes. The first one is <tt>&lt;body class="lift:content_id=main"&gt;</tt>. The class in this case says “the actual page content is contained by the element with id=’main’.” This allows you to have valid HTML pages for each of your templates, but dynamically add “chrome” around the content based on one or more chrome templates.
+</div>
+<div class="Standard">
+Let’s look at the <tt>&lt;div id="main"&gt;</tt>. It’s got a funky class as well: <tt>lift:surround?with=default;at=content</tt>. This class invokes a snippet which surrounds the <tt>&lt;div&gt;</tt> with the default template and inserts the <tt>&lt;div&gt;</tt> and its children at the element with id “content” in the default template. Or, it wraps the default chrome around the <tt>&lt;div&gt;</tt>. For more on snippets, see <a class="Reference" href="index-7.1.html#sec:Snippets">7.1 on page 1↓</a>.
+</div>
+<div class="Standard">
+Next, we define how we associate dynamic behavior with the list of chat elements: <tt>&lt;div class="lift:comet?type=Chat"&gt;</tt>. The “comet” snippet looks for a class named <tt>Chat</tt> that extends <tt>CometActor</tt> and enables the mechanics of pushing content from the <tt>CometActor</tt> to the browser when the state of the <tt>CometActor</tt> changes. 
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-2.html#Next">Previous: Chapter 2</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.2.html#prev">Next: Section 2.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

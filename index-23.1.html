@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-23.html#Next">Previous: Chapter 23</a></span>
+<span class="up"><a class="up" href="index-Chapter-23.html">Up: Chapter 23</a></span>
+<span class="next"><a class="next" name="Next" href="index-23.2.html#prev">Next: Section 23.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-23.1">23.1</a> <a class="Label" name="sec:Snippet-Resolution"> </a>Snippet Resolution
+</h2>
+<div class="Standard">
+Lift snippets transform markup to dynamic content. The are functions that transform <tt>NodeSeq =&gt; NodeSeq</tt>.
+</div>
+<div class="Standard">
+Snippets can be invoked from templates via tags:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;lift:surround with="default" at="content"&gt;
+  &lt;p&gt;
+    You have reached this page, but you can only get here if you’ve logged in
+    first.
+  &lt;/p&gt;
+&lt;/lift:surround&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+or via class attributes.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;p class="lift:surround?with=default;at=content"&gt;
+  You have reached this page, but you can only get here if you’ve logged in
+  first.
+&lt;/p&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In both cases, the surround (See <a class="Reference" href="index-9.11.html#sec:Surround">↑</a>) snippet will be invoked with attribute <tt>with</tt> set to <tt>default</tt> and <tt>at</tt> set to <tt>content</tt>. The parameter passed to the surround <tt>NodeSeq =&gt; NodeSeq</tt> function is:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;p&gt;
+  You have reached this page, but you can only get here if you’ve logged in
+  first.
+&lt;/p&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Lift will resolve from the snippet name to a function in the following steps.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-23.1.1">23.1.1</a> <tt>LiftSession.liftTagProcessing</tt>
+</h3>
+<div class="Standard">
+Lift consults a <tt>List[PartialFunction[(String, Elem, MetaData, NodeSeq, String), NodeSeq]]</tt> located in LiftSession.liftTagProcessing for the rules to use to evaluate the snippet name, attributes, etc. into the resulting <tt>NodeSeq</tt>. <tt>LiftSession.liftTagProcessing</tt> is the result of <tt>LiftRules.liftTagProcessing</tt> or else the default Lift tag processor. If you need special snippet resolution mechanisms, you can place them in <tt>LiftRules.liftTagProcessing</tt>. By default, the snippets get processed by <tt>LiftSession.processSnippet.</tt>
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-23.1.2">23.1.2</a> <tt>LiftRules.liftTagProcessing</tt>
+</h3>
+<div class="Standard">
+<tt>LiftRules.liftTagProcessing</tt> looks for the <tt>form</tt> attribute and sets the <tt>isForm</tt> variable. Next, Lift determines if the contents of the snippet should be evaluated eagerly by looking for one of <tt>eager_eval</tt>, <tt>l:eager_eval</tt>, or <tt>lift:eager_eval</tt> attributes.
+</div>
+<div class="Standard">
+If the snippet is an eager evaluation, the child tags will be evaluated for any snippets.
+</div>
+<div class="Standard">
+Either the originally passed children or the eagerly evaluated children will be referred to as children in the next section.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-23.1.3">23.1.3</a> Snippet name resolution
+</h3>
+<div class="Standard">
+Lift looks for the named snippet in the following locations in order:
+</div>
+<ul>
+<li>
+<tt>S.locateMappedSnippet</tt> - the complete snippet name without any camel or snake application is used to look up a <tt>NodeSeq =&gt; NodeSeq</tt> in within the scope of the current extended request<span class="FootOuter"><span class="SupFootMarker"> [G] </span><span class="HoverFoot"><span class="SupFootMarker"> [G] </span>For the purposes of this discussion, the extended request is the scope of a <tt>RequestVar</tt>. This is the scope of a full page render plus any subsequent Ajax operations that originate from that page. This means that a snippet may be registered using <tt>S.mapSnippet</tt> during page rendering and the same snippet function with the same scope binding will be used by any Ajax commands.</span></span>. Snippets may be registered using <tt>S.mapSnippet</tt>. 
+</li>
+<li>
+<tt>SiteMap</tt> <tt>Loc</tt> snippet - the current <tt>SiteMap</tt> <tt>Loc</tt> (<tt>S.location</tt>) will be queried to see if it has a <tt>NodeSeq =&gt; NodeSeq</tt> that matches the current snippet name (<tt>loc.snippet(snippetName)</tt>).
+</li>
+<li>
+<tt>LiftRules.snippets</tt> - next, the snippet name is split at the ’.’ character to determine the snippet name and snippet method name. The <tt>snippets</tt> <tt>RulesSeq</tt> is tested for a match between the <tt>List[String]</tt> that results from splitting the name at the period and <tt>NodeSeq =&gt; NodeSeq</tt>.
+</li>
+<li>
+If the above mechanisms do not result in a NodeSeq =&gt; NodeSeq, Lift looks for a <tt>Class</tt> that matches the name.<ul>
+<li>
+<tt>S.snippetForClass</tt> - is checked to see if a <tt>Class</tt> has been associated with the snippet name. If none is found...
+</li>
+<li>
+<tt>LiftRules.snippetDispatch</tt> is checked to see if theres an instance of <tt>DispatchSnippet</tt> that matches to snippet name. Lift’s built-in snippets are registered with <tt>LiftRules.snippetDispatch</tt>. If there’s no match...
+</li>
+<li>
+Lift tries reflection to find a matching class name (note that Lift will try camel case and snake case for class names, so the <tt>foo_bar</tt> snippet will match the class <tt>foo_bar</tt> as well as <tt>FooBar</tt>). Lift looks for classes in the <tt>snippet</tt> subpackage of all the packages added via <tt>LiftRules.addToPackages</tt>. So if you call <tt>LiftRules.addToPackages("foo.bar")</tt> in <tt>Boot.scala</tt>, then Lift will search for the classes <tt>foo.bar.snippet.foo_bar</tt> and <tt>foo.bar.snippet.FooBar</tt>.
+</li>
+<li>
+Once the class is found, Lift will try to instantiate the class the following ways:<ul>
+<li>
+Lift will look at the current location (<tt>S.location</tt>) and if the parameter type of the <tt>Loc</tt> is not <tt>Unit</tt>, Lift get the current parameter and look for a constructor that matches the current parameter type or <tt>Box</tt> of current parameter type (and superclasses of both). If there’s a match the constructor will be called with the parameters. For example, if the current page is a <tt>Loc[Dog]</tt> and <tt>Dog</tt> is a subclass of <tt>Animal</tt>, the following constructors will match:<ul>
+<li>
+<tt>class MySnippet(dog: Dog)</tt>
+</li>
+<li>
+<tt>class MySnippet(animal: Animal)</tt>
+</li>
+<li>
+<tt>class MySnippet(dog: Box[Dog])</tt>
+</li>
+<li>
+<tt>class MySnippet(animal: Box[Animal])</tt>
+</li>
+<li>
+<tt>class MySnippet(dog: Dog, session: LiftSession)</tt>
+</li>
+<li>
+<tt>class MySnippet(animal: Animal, session: LiftSession)</tt>
+</li>
+<li>
+<tt>class MySnippet(dog: Box[Dog], session: LiftSession)</tt>
+</li>
+<li>
+<tt>class MySnippet(animal: Box[Animal], session: LiftSession)</tt>
+</li>
+
+</ul>
+
+</li>
+<li>
+If a typed constructor cannot be found, try the zero argument constructor;
+</li>
+<li>
+If the zero argument constructor cannot be found, try to treat the <tt>Class</tt> as a Scala <tt>object</tt> singleton and get the instance that the singleton refers to.
+</li>
+
+</ul>
+
+</li>
+<li>
+Once we’ve got an instance of the potential snippet handling class:<ul>
+<li>
+If it’s a <tt>StatefulSnippet</tt>, register with <tt>S.overrideSnippetForClass</tt>;
+</li>
+<li>
+Update the <tt>LiftSession</tt> <tt>snippetMap</tt> <tt>RequestVar</tt> so subsequent references to the snippet during the same extended request uses same instance (that way if any instance variables are set on the class instance, they are picked up by subsequent accesses to the same snippet);
+</li>
+<li>
+Next, Lift attempts to invoke the snippet method. If no explicit method is given, the <tt>render</tt> method is used.<ul>
+<li>
+Stateful and Dispatch use <tt>dispatch</tt> method to find the <tt>NodeSeq =&gt; NodeSeq</tt>
+</li>
+<li>
+Non-dispatch, do the following method lookup:
+</li>
+<li>
+method that takes no parameters and returns <tt>CssBindFunc</tt>, <tt>NodeSeq =&gt; NodeSeq</tt>, invoke the method and apply the function to the children; or
+</li>
+<li>
+try to invoke the named method with <tt>Group(children)</tt> (<tt>NodeSeq</tt> signature) or invoke it with no parameters. If the return value is <tt>NodeSeq</tt>, <tt>Node</tt>, or <tt>Seq[Node]</tt>, then it was successful.
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-23.1.4">23.1.4</a> Post-processing of results
+</h3>
+<ul>
+<li>
+LiftRules.snippetDispatch (built in snippets registered here)
+</li>
+
+</ul>
+<div class="Standard">
+parallel snippets
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-23.html#Next">Previous: Chapter 23</a></span>
+<span class="up"><a class="up" href="index-Chapter-23.html">Up: Chapter 23</a></span>
+<span class="next"><a class="next" name="Next" href="index-23.2.html#prev">Next: Section 23.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

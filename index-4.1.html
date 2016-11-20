@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-4.html#Next">Previous: Chapter 4</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.2.html#prev">Next: Section 4.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.1">4.1</a> Old Fashioned Dumb Forms
+</h2>
+<div class="Standard">
+Let’s take a look at the HTML for a form:
+</div>
+<div class="listing">
+<div class="caption">
+dumb.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    This is the simplest type of form processing... plain old
+    mechanism of naming form elements and processing the form elements
+    in a post-back.
+  &lt;/div>
+  
+  &lt;div>
+    &lt;form action="/dumb" method="post" class="lift:DumbForm">
+      Name: &lt;input name="name">&lt;br>
+      Age: &lt;input name="age">&lt;br>
+      &lt;input type="submit" value="Submit">
+    &lt;/form>
+  &lt;/div>
+&lt;/div>
+​
+​
+</pre>
+</div>
+<div class="Standard">
+Okay... looks pretty normal... we define a form. The only thing we do is associate the behavior with the form with the <tt>class="lift:DumbForm"</tt> attribute on the <tt>&lt;form&gt;</tt> tag. The page is a post-back which means that the form is posted to the same URL that served the original content.
+</div>
+<div class="Standard">
+Let’s see the code to process the form:
+</div>
+<div class="listing">
+<div class="caption">
+DumbForm.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import scala.xml.NodeSeq
+​
+/**
+ * A snippet that grabs the query parameters
+ * from the form POST and processes them
+ */
+object DumbForm {
+  def render(in: NodeSeq): NodeSeq = {
+​
+    // use a Scala for-comprehension to evaluate each parameter
+    for {
+      r <- S.request if r.post_? // make sure it's a post
+      name <- S.param("name") // get the name field
+      age <- S.param("age") // get the age field
+    } {
+      // if everything goes as expected,
+      // display a notice and send the user
+      // back to the home page
+      S.notice("Name: "+name)
+      S.notice("Age: "+age)
+      S.redirectTo("/")
+    }
+​
+    // pass through the HTML if we don't get a post and
+    // all the parameters
+    in
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+It’s pretty simple. If the request is a post and the query parameters exist, then display notices with the name and age and redirect back the application’s home page.
+</div>
+<div class="Standard">
+There are plenty of reasons not to do things this way.
+</div>
+<div class="Standard">
+First, if there’s a naming mis-match between the HTML and the Scala code, you might miss a form field... and keeping the naming aligned is not always easy.
+</div>
+<div class="Standard">
+Second, forms with predictable names lead to replay attacks. If an attacker can capture the form submits you’ve made and substitute new values for import fields, they can more easily hack your application.
+</div>
+<div class="Standard">
+Third, keeping state around becomes very difficult with manual forms. You have to resort to hidden fields that contain primary keys or other information that can be tampered with.
+</div>
+<div class="Standard">
+Lift provides you with much more powereful and secure mechanisms for dealing with HTML forms.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-4.html#Next">Previous: Chapter 4</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.2.html#prev">Next: Section 4.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

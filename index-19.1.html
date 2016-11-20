@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-19.html#Next">Previous: Chapter 19</a></span>
+<span class="up"><a class="up" href="index-Chapter-19.html">Up: Chapter 19</a></span>
+<span class="next"><a class="next" name="Next" href="index-19.2.html#prev">Next: Section 19.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-19.1">19.1</a> Problem
+</h2>
+<div class="Standard">
+What am I doing wrong? I’m trying to output a javascript object into the page (so my front end guy can do some stuff with the data without parsing it out of elements by id) but it’s replacing all the double quotes with <tt>&amp;quot;</tt> (only in view source - if I inspect it then firebug converts them to double quotes again)
+</div>
+<div class="Standard">
+I’ve copied the example from <span class="versalitas">Exploring Lift</span>, but it still does the same:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">&amp; ".data_as_object *" #&gt; {
+   JsCrVar("myObject", JsObj(("persons", JsArray(
+       JsObj(("name", "Thor"), ("race", "Asgard")),
+       JsObj(("name", "Todd"), ("race", "Wraith")),
+       JsObj(("name", "Rodney"), ("race", "Human"))
+   ))))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Becomes:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;div class="data_as_object" style="display: none;"&gt;var myObject =
+{&amp;quot;persons&amp;quot;: [{&amp;quot;name&amp;quot;: &amp;quot;Thor&amp;quot;,
+&amp;quot;race&amp;quot;: &amp;quot;Asgard&amp;quot;}, {&amp;quot;name&amp;quot;:
+&amp;quot;Todd&amp;quot;, &amp;quot;race&amp;quot;: &amp;quot;Wraith&amp;quot;},
+{&amp;quot;name&amp;quot;: &amp;quot;Rodney&amp;quot;, &amp;quot;race&amp;quot;:
+&amp;quot;Human&amp;quot;}]
+};&lt;/div&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+I’ve noticed that if what I’m outputting is a number rather than a string then it’s fine.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-19.html#Next">Previous: Chapter 19</a></span>
+<span class="up"><a class="up" href="index-Chapter-19.html">Up: Chapter 19</a></span>
+<span class="next"><a class="next" name="Next" href="index-19.2.html#prev">Next: Section 19.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

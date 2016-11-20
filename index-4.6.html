@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.5.html#Next">Previous: Section 4.5</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.7.html#prev">Next: Section 4.7</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.6">4.6</a> <tt>LiftScreen</tt>
+</h2>
+<div class="Standard">
+Much of what we do to build web applications is generating screens that associate input with dynamic content. Lift provides Screen and Wizard for building single page and multi-page input forms with validation, back-button support, etc.
+</div>
+<div class="Standard">
+So, let’s look at the HTML for a screen:
+</div>
+<div class="listing">
+<div class="caption">
+screen.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    Let's use Lift's LiftScreen to build complex
+    simple screen input forms.
+  &lt;/div>
+      
+  &lt;div class="lift:ScreenExample">
+    Put your form here
+  &lt;/div>
+&lt;/div>
+​
+</pre>
+</div>
+<div class="Standard">
+We don’t explicitly declare the form elements. We just point to the snippet which looks like:
+</div>
+<div class="listing">
+<div class="caption">
+ScreenExample.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+​
+/**
+ * Declare the fields on the screen
+ */
+object ScreenExample extends LiftScreen {
+  // here are the fields and default values
+  val name = field("Name", "")
+​
+  // the age has validation rules
+  val age = field("Age", 0, minVal(13, "Too Young"))
+​
+  def finish() {
+    S.notice("Name: "+name)
+    S.notice("Age: "+age)
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+In the screen, we define the fields and their validation rules and then what to do when the screen is finished. Lift takes care of the rest.
+</div>
+<div class="Standard">
+The markup for generating the form, by default, is found in <tt>/templates-hidden/wizard-all.html</tt>. You can also select templates on a screen-by-screen basis.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.5.html#Next">Previous: Section 4.5</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.7.html#prev">Next: Section 4.7</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

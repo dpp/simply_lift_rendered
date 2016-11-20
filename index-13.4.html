@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.3.html#Next">Previous: Section 13.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.5.html#prev">Next: Section 13.5</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-13.4">13.4</a> Creating the Snippet
+</h2>
+<div class="Standard">
+Next you have to tell Lift what the rules are for transforming the section of your template based on dynamic rules. This is a Snippet... it’s a function that transforms <tt>NodeSeq =&gt; NodeSeq</tt>. Let’s look at the <tt>TimeNow</tt> snippet:
+</div>
+<div class="listing">
+<div class="caption">
+TimeNow.scala
+</div>
+<pre class="listing brush: scala">// make sure this is the snippet package so Lift
+// can find the snippet
+package code
+package snippet
+​
+// some inputs
+import net.liftweb._
+import util._
+import Helpers._
+​
+// our snippet
+object TimeNow {
+  // create a function (NodeSeq => NodeSeq)
+  // that puts the current time into the
+  // body of the incoming Elem
+  def render = "* *" #> now.toString
+}
+</pre>
+</div>
+<div class="Standard">
+This snippet must be in the <tt>snippet</tt> package so Lift knows how to find it by convention.
+</div>
+<div class="Standard">
+It is an <tt>object</tt> which is a singleton because the snippet has no state.
+</div>
+<div class="Standard">
+Lift calls the <tt>render</tt> method on a snippet unless you specify another method when you invoke your snippet.
+</div>
+<div class="Standard">
+The snippet generates a function, <tt>NodeSeq =&gt; NodeSeq</tt>, that uses Lift’s CSS Selector Transforms (See <a class="Reference" href="index-7.10.html#sec:CSS-Selector-Transforms">7.10 on page 1↑</a>) to insert the current time into the body of all HTML Elements: <tt>def render = "* *" #&gt; now.toString</tt>
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.3.html#Next">Previous: Section 13.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.5.html#prev">Next: Section 13.5</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

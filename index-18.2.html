@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-18.1.html#Next">Previous: Section 18.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-18.html">Up: Chapter 18</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-19.html#prev">Next: Chapter 19</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-18.2">18.2</a> Solution
+</h2>
+<div class="Standard">
+This is an ideal use of URL rewriting.
+</div>
+<div class="Standard">
+You have to hook up the module in <tt>Boot.scala</tt> with: <tt>UrlLocalizer.init()</tt>.
+</div>
+<div class="Standard">
+You can see a complete runnable example at <a class="URL" href="https://github.com/dpp/starting_point/tree/localize_url">DPP's GitHub Starting Point</a>.
+</div>
+<div class="Standard">
+Here’s the code:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">package code
+package lib
+​
+import net.liftweb._
+import http._
+import provider._
+import common._
+​
+import java.util.Locale
+​
+object UrlLocalizer {
+  // capture the old localization function
+  val oldLocalizeFunc = LiftRules.localeCalculator
+​
+  /**
+   * What are the available locales?
+   */
+  val locales: Map[String, Locale] = 
+    Map(Locale.getAvailableLocales.map(l =&gt; l.toString -&gt; l) :_*)
+​
+  object currentLocale extends RequestVar(Locale.getDefault)
+​
+  /**
+   * Extract the locale
+   */
+  def unapply(in: String): Option[Locale] = 
+    if (currentLocale.set_?) None // don’t duplicate
+  else locales.get(in) // if it’s a valid locale, it matches
+​
+  /**
+   * Calculate the Locale
+   */
+  def calcLocale(in: Box[HTTPRequest]): Locale = 
+    if (currentLocale.set_?) currentLocale.get
+  else oldLocalizeFunc(in)
+​
+  /**
+   * Initialize the locale
+   */
+  def init() {
+    // hook into Lift
+    LiftRules.localeCalculator = calcLocale
+​
+    // rewrite requests with a locale at the head
+    // of the path
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath(UrlLocalizer(locale) :: rest,
+                                    _, _, _), _, _) =&gt; {
+        currentLocale.set(locale)
+        RewriteResponse(rest)
+      }
+    }
+  }
+}
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-18.1.html#Next">Previous: Section 18.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-18.html">Up: Chapter 18</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-19.html#prev">Next: Chapter 19</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

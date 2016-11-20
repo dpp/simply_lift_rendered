@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.1.html#Next">Previous: Section 4.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.3.html#prev">Next: Section 4.3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.2">4.2</a> OnSubmit
+</h2>
+<div class="Standard">
+Some of Lift’s design reflects VisualBasic... associating user behavior with a user interface element. It’s a simple, yet very powerful concept. Each form element is associated with a function on the server<span class="FootOuter"><span class="SupFootMarker"> [C] </span><span class="HoverFoot"><span class="SupFootMarker"> [C] </span>Before you get all upset about statefulness and such, please read about Lift and State (see <a class="Reference" href="index-Chapter-20.html#cha:Scaling">20 on page 1↓</a>).</span></span>. Further, because functions in Scala close over scope (capture the variables currently in scope), it’s both easy and secure to keep state around without exposing that state to the web client.
+</div>
+<div class="Standard">
+So, let’s see how it works. First, the HTML:
+</div>
+<div class="listing">
+<div class="caption">
+onsubmit.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    Using Lift's SHtml.onSubmit, we've got better control
+    over the form processing.
+  &lt;/div>
+  
+  &lt;div>
+    &lt;form class="lift:OnSubmit?form=post">
+      Name: &lt;input name="name">&lt;br>
+      Age: &lt;input name="age" value="0">&lt;br>
+      &lt;input type="submit" value="Submit">
+    &lt;/form>
+  &lt;/div>
+&lt;/div>
+​
+​
+</pre>
+</div>
+<div class="Standard">
+The only different thing in this HTML is <tt>&lt;form class="lift:OnSubmit?form=post"&gt;</tt>. The snippet, behavior, of the form is to invoke <tt>OnSubmit.render</tt>. The <tt>form=post</tt> attribute makes the form into a post-back. It sets the <tt>method</tt> and <tt>action</tt> attributes on the <tt>&lt;form&gt;</tt> tag: <tt>&lt;form method="post" action="/onsubmit"&gt;</tt>.
+</div>
+<div class="Standard">
+Let’s look at the snippet:
+</div>
+<div class="listing">
+<div class="caption">
+OnSubmit.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import util.Helpers._
+import scala.xml.NodeSeq
+​
+/**
+ * A snippet that binds behavior, functions,
+ * to HTML elements
+ */
+object OnSubmit {
+  def render = {
+    // define some variables to put our values into
+    var name = ""
+    var age = 0
+​
+    // process the form
+    def process() {
+      // if the age is < 13, display an error
+      if (age < 13) S.error("Too young!")
+      else {
+        // otherwise give the user feedback and
+        // redirect to the home page
+        S.notice("Name: "+name)
+        S.notice("Age: "+age)
+        S.redirectTo("/")
+      }
+    }
+​
+    // associate each of the form elements
+    // with a function... behavior to perform when the
+    // for element is submitted
+    "name=name" #> SHtml.onSubmit(name = _) & // set the name
+    // set the age variable if we can convert to an Int
+    "name=age" #> SHtml.onSubmit(s => asInt(s).foreach(age = _)) &
+    // when the form is submitted, process the variable
+    "type=submit" #> SHtml.onSubmitUnit(process)
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+Like <tt>DumbForm.scala</tt>, the snippet is implemented as a singleton. The render method declares two variables: <tt>name</tt> and <tt>age</tt>. Let’s skip the <tt>process()</tt> method and look at the was we’re associating behavior with the form elements.
+</div>
+<div class="Standard">
+<tt>"name=name" #&gt; SHtml.onSubmit(name = _)</tt> takes the incoming HTML elements with the <tt>name</tt> attribute equal to “name” and, via the <tt>SHtml.onSubmit</tt> method, associating a function with the form element. The function takes a <tt>String</tt> parameter and sets the value of the <tt>name</tt> variable to the <tt>String</tt>. The resulting HTML is <tt>&lt;input name="F10714412223674KM"&gt;</tt>. The new <tt>name</tt> attribute is a GUID (globally unique identifier) that associates the function (set the name to the input) with the form element. When the form is submitted, via normal HTTP post or via Ajax, the function will be executed with the value of the form element. On form submit, perform this function.
+</div>
+<div class="Standard">
+Let’s see about the age form field: <tt>"name=age" #&gt; SHtml.onSubmit(s =&gt; asInt(s).foreach(age = _))</tt>. The function that’s executed uses <tt>Helpers.asInt</tt> to try to parse the <tt>String</tt> to an <tt>Int</tt>. If the parsing is successful, the <tt>age</tt> variable is set to the parsed <tt>Int</tt>.
+</div>
+<div class="Standard">
+Finally, we associate a function with the submit button: <tt>"type=submit" #&gt; SHtml.onSubmitUnit(process)</tt>. <tt>SHtml.onSubmitUnit</tt> method takes a function that takes no parameters (rather than a function that takes a single <tt>String</tt> as a parameter) and applies that function when the form is submitted.
+</div>
+<div class="Standard">
+The <tt>process()</tt> method closes over the scope of the <tt>name</tt> and <tt>age</tt> variables and when that method is lifted to a function, it still closes over the variables... that means that when the function is applied, it refers to the same instances of the <tt>name</tt> and <tt>age</tt> variables as the other functions in this method. However, if we had 85 copies of the form open in 85 browsers, each would be closing over different instances of the <tt>name</tt> and <tt>age</tt> variables. In this way, Lift allows your application to contain complex state without exposing that complex state to the browser.
+</div>
+<div class="Standard">
+The problem with this form example is that if you type an incorrect age, the whole form is reset. Let’s see how we can do better error handling.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.1.html#Next">Previous: Section 4.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.3.html#prev">Next: Section 4.3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

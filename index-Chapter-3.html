@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.7.html#Next">Previous: Section 2.7</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.1.html#prev">Next: Section 3.1</a></span>
+</div>
+<h1 class="Chapter">
+<a class="toc" name="toc-Chapter-3">3</a> <a class="Label" name="cha:Snippets-and-SiteMap"> </a>Snippets and SiteMap
+</h1>
+<div class="Standard">
+Lift services HTTP request in three ways: generating HTML pages, low level HTTP responses (e.g., REST), and responding to Ajax/Comet requests. Lift treats each type of request differently to make the semantics for responding to each type of request most natural. Put another way, it’s different to build a complex HTML page with lots of different components than to send back some JSON data that corresponds to a database record.
+</div>
+<div class="Standard">
+In this chapter, we’re going to explore how Lift does dynamic HTML page generation based on the incoming HTTP request and URL including putting “chrome” around the HTML page (menus, etc.), placing dynamic content on each page, and site navigation including access control.
+</div>
+<div class="Standard">
+The code for this chapter can be found in the <tt>samples/snippet_and_sitemap</tt> directory of the <i>Simply Lift</i> <a class="URL" href="https://github.com/dpp/simply_lift/tarball/master">distribution</a>.
+</div>
+<div class="fulltoc">
+<div class="tocheader">
+Contents for Chapter 3
+</div>
+<div class="tocindent">
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Section-3.1">Section 3.1: Starting at the beginning: <tt>Boot.scala</tt></a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.1">Subsection 3.1.1: <tt>LiftRules</tt> rules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.2">Subsection 3.1.2: Properties and Run modes</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.3">Subsection 3.1.3: By convention</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.4">Subsection 3.1.4: Misc Rules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.5">Subsection 3.1.5: Html5</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Section-3.2">Section 3.2: <tt>SiteMap</tt></a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.1">Subsection 3.2.1: Defining the <tt>SiteMap</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.2">Subsection 3.2.2: Simplest <tt>SiteMap</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.3">Subsection 3.2.3: <tt>Menu</tt> and <tt>Loc[_]</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.4">Subsection 3.2.4: Access Control</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.5">Subsection 3.2.5: <tt>Hidden</tt> and <tt>Group</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.6">Subsection 3.2.6: Submenus</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.7">Subsection 3.2.7: Parameters</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.8">Subsection 3.2.8: Wildcards</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.9">Subsection 3.2.9: Summary</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Section-3.3">Section 3.3: View First</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.1">Subsection 3.3.1: Page source</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.2">Subsection 3.3.2: Dynamic content</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.3">Subsection 3.3.3: Surround and page chrome</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.4">Subsection 3.3.4: Embed</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.5">Subsection 3.3.5: Results</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Section-3.4">Section 3.4: Snippets and Dynamic content</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.1">Subsection 3.4.1: Snippets in markup</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.2">Subsection 3.4.2: Snippet resolution</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.3">Subsection 3.4.3: Dynamic Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.4">Subsection 3.4.4: Embedded Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.5">Subsection 3.4.5: Param Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.6">Subsection 3.4.6: Recursive</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.7">Subsection 3.4.7: Summary</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.5.html#toc-Section-3.5">Section 3.5: Wrap up</a>
+</div>
+</div>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.7.html#Next">Previous: Section 2.7</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.1.html#prev">Next: Section 3.1</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

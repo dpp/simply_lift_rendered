@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-7.1.html#Next">Previous: Section 7.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.3.html#prev">Next: Section 7.3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-7.2">7.2</a> Box/Option<a class="Label" name="sec:Box/Option"> </a>
+</h2>
+<div class="Standard">
+Scala has a ton of nice features. One of the features that I was slow to adopt, until Burak Emir gently reminded me a bunch of times, is "Options". Read on about Options, Boxes, and how Lift makes good use of them to make clean, error resistant code. If you come from an imperative (Java, Ruby) background, you’ll probably recognize the following code:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">x = someOperation 
+if !x.nil? 
+  y = someOtherOperation 
+  if !y.nil? 
+    doSomething(x,y) return "it worked" 
+  end
+end
+return "it failed" 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Okay, so that’s pseudo-code, but there are tons of operation, guard, operation, guard, blah blah constructs.
+</div>
+<div class="Standard">
+Further, null/nil are passed around as failures. This is especially bad when it’s null, but it’s pretty bad when it’s nil because it’s not clear to the consumer of the API that there can be a "call failed" return value.
+</div>
+<div class="Standard">
+In Java, <tt>null</tt> is a non-object. It has no methods. It is the exception to the statically typed rule (<tt>null</tt> has no class, but any reference of any class can be set to <tt>null</tt>.) Invoking a method on <tt>null</tt> has one and only one result: an exception is thrown. <tt>null</tt> is often returned from methods as a flag indicating that the method ran successfully, but yielded no meaningful value. For example, <tt>CardHolder.findByCreditCardNumber("2222222222")</tt> In fact, the guy who invented <tt>null</tt> called it a <a class="URL" href="http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare">billion dollar mistake</a>.
+</div>
+<div class="Standard">
+Ruby has <tt>nil</tt> which is marginally better than <tt>null</tt>. <tt>nil</tt> is a real, singleton object. There’s only one instance of <tt>nil</tt> in the whole system. It has methods. It is a subclass of <tt>Object</tt>. <tt>Object</tt> has a method called "<tt>nil?</tt>" which returns <tt>false</tt>, except the <tt>nil</tt> singleton overrides this method to return <tt>true</tt>. <tt>nil</tt> is returned much like <tt>null</tt> in Java. It’s the "no valid answer" answer.
+</div>
+<div class="Standard">
+Scala does something different.
+</div>
+<div class="Standard">
+There’s an abstract class, called <tt>Option</tt>. Options are strongly typed. They are declared <tt>Option[T]</tt>. This means an <tt>Option</tt> can be of any type, but once its type is defined, it does not change. There are two subclasses of <tt>Option</tt>: <tt>Some</tt> and <tt>None</tt>. <tt>None</tt> is a singleton (like <tt>nil</tt>). <tt>Some</tt> is a container around the actual answer. So, you might have a method that looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">def findUser(name: String): Option[User] = { 
+  val query = buildQuery(name)
+  val resultSet = performQuery(query)
+  val retVal = if (resultSet.next) Some(createUser(resultSet)) else None
+  resultSet.close 
+  retVal 
+} 
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+Some, you’ve got a <tt>findUser</tt> method that returns either <tt>Some(User)</tt> or <tt>None</tt>. So far, it doesn’t look a lot different than our example above. So, to confuse everyone, I’m going to talk about collections for a minute.
+</div>
+<div class="Standard">
+A really nice thing in Scala (yes, Ruby has this too) is rich list operations. Rather than creating a counter and pulling list (array) elements out one by one, you write a little function and pass that function to the list. The list calls the function with each element and returns a new list with the values returned from each call. It’s easier to see it in code:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; List(1,2,3).map(x =&gt; x * 2)
+line0: scala.List[scala.Int] = List(2,4,6)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The above code multiplies each list item by two and "map" returns the resulting list. Oh, and you can be more terse, if you want:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; List(1,2,3).map(_ * 2)
+line2: scala.List[scala.Int] = List(2,4,6)
+</pre>
+</div>
+You can nest map operations:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; List(1,2,3).map(x =&gt; List(4,5,6).map(y =&gt; x * y))
+line13: scala.List[scala.List[scala.Int]] = List(List(4,5,6),List(8,10,12),List(12,15,18))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And, you can "flatten" the inner list:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; List(1,2,3).flatMap(x =&gt; List(4,5,6).map(y =&gt; x * y))
+line14: scala.List[scala.Int] = List(4,5,6,8,10,12,12,15,18)
+</pre>
+</div>
+Finally, you can "filter" only the even numbers from the first list:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; List(1,2,3).filter(_ % 2 == 0). flatMap(x =&gt; List(4,5,6).map(y =&gt; x * y))
+line16: scala.List[scala.Int] = List(8,10,12)
+</pre>
+</div>
+But, as you can see, the <tt>map</tt>/<tt>flatMap</tt>/<tt>filter</tt> stuff gets pretty verbose. Scala introduced a "for" comprehension to make the code more readable:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; for {
+  x &lt;- List(1,2,3) if x % 2 == 0
+  y &lt;- List(4,5,6)} yield x * y
+res0: List[Int] = List(8, 10, 12)
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+Okay, but what does this have to do with <tt>Option[T]</tt>?
+</div>
+<div class="Standard">
+Turns out that <tt>Option</tt> implements <tt>map</tt>, <tt>flatMap</tt>, and <tt>filter</tt> (the methods necessary for the Scala compiler to use in the ’for’ comprehension). Just as a side note, when I first encountered the phrase "’for’ comprehension", I got scared. I’ve been doing programming for years and never heard of a "comprenhension" let alone a ’for’ one. Turns out, that there’s nothing fancy going on, but "’for’ comprehension" is just a term of art for the above construct.
+</div>
+<div class="Standard">
+So, the cool thing is that you can use this construct very effectively. The first example is simple:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; for {x &lt;- Some(3); y &lt;- Some(4)} yield x * y
+res1: Option[Int] = Some(12)
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+"That’s nice, you just wrote a lot of code to multiply 3 by 4."
+</div>
+<div class="Standard">
+Let’s see what happens if we have a "None" in there:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; val yOpt: Option[Int] = None
+yOpt: Option[Int] = None 
+scala&gt; for {x &lt;- Some(3); y &lt;- yOpt} yield x * y
+res3: Option[Int] = None
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+So, we get a "<tt>None</tt>" back. How do we turn this into a default value?
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; (for {x &lt;- Some(3); y &lt;- yOpt} yield x * y) getOrElse -1
+res4: Int = -1
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; (for {x &lt;- Some(3); y &lt;- Some(4)} yield x * y) getOrElse -1
+res5: Int = 12
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Note that the "<tt>getOrElse</tt>" code is "passed by name". Put another way, that code is only executed if the "else" clause is valid.
+</div>
+<div class="Standard">
+Lift has an analogous construct called <tt>Box</tt>.
+</div>
+<div class="Standard">
+A <tt>Box</tt> can be <tt>Full</tt> or not. A non-<tt>Full</tt> <tt>Box</tt> can be the <tt>Empty</tt> singleton or a <tt>Failure</tt>. A <tt>Failure</tt> carries around information about why the <tt>Box</tt> contains no value.
+</div>
+<div class="Standard">
+<tt>Failure</tt> is very helpful because you can carry around information to display an error... an HTTP response code, a message, what have you.
+</div>
+<div class="Standard">
+In Lift, I put this all together in the following way:
+</div>
+<ul>
+<li>
+methods that return request parameters return <tt>Box[String]</tt> 
+</li>
+<li>
+finder methods on models (not find all, just the ones that return a single instance) return <tt>Box[Model]</tt>
+</li>
+<li>
+any method that would have returned a null if I was writing in Java returns a <tt>Box[T]</tt> in Lift 
+</li>
+
+</ul>
+<div class="Standard">
+That means you get code that looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; for {id &lt;- S.param("id") ?~ "id param missing"
+u &lt;- getUser(id) ?~ "User not found" 
+} yield u.toXml 
+res6: net.liftweb.common.Box[scala.xml.Elem] = Failure(id param missing,Empty,Empty) 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+There’s no explicit guard/test to see if the "<tt>id</tt>" parameter was passed in and there’s no explicit test to see if the user was found.
+</div>
+<div class="Standard">
+Note also that this code is completely type-safe. While there was no explicit type declarations, the compiler was able to figure out what types the various objects were.
+</div>
+<div class="Standard">
+So, let’s look at the code inside a REST handler:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case "user" :: "info" :: _ XmlGet _ =&gt; 
+    for {
+      id &lt;- S.param("id") ?~ "id param missing" ~&gt; 401 
+      u &lt;- User.find(id) ?~ "User not found" 
+    } yield u.toXml 
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+If the <tt>id</tt> parameter is missing, present a nice error message and return a 401 (okay... this is random, but you get the point). And by default, if the user isn’t found, return a 404 with the error that the user isn’t found.
+</div>
+<div class="Standard">
+Here’s what it looks like using wget:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: bash">dpp@bison:~/lift_sbt_prototype$ wget http://localhost:8080/user/info.xml
+--2010-06-01 15:07:27-- http://localhost:8080/user/info.xml
+Resolving localhost... ::1, 127.0.0.1 
+Connecting to localhost|::1|:8080... connected. 
+HTTP request sent, awaiting response... 401 Unauthorized 
+Authorization failed.
+​
+dpp@bison:~/lift_sbt_prototype$ wget http://localhost:8080/user/info.xml?id=2
+--2010-06-01 15:07:44-- http://localhost:8080/user/info.xml?id=2
+Resolving localhost... ::1, 127.0.0.1
+Connecting to localhost|::1|:8080... connected. 
+HTTP request sent, awaiting response... 404 Not Found 
+2010-06-01 15:07:44 ERROR 404: Not Found.
+​
+dpp@bison:~/lift_sbt_prototype$ wget http://localhost:8080/user/info.xml?id=1
+--2010-06-01 15:24:12-- http://localhost:8080/user/info.xml?id=1
+Resolving localhost... ::1, 127.0.0.1
+Connecting to localhost|::1|:8080... connected. 
+HTTP request sent, awaiting response... 
+200 OK Length: 274 [text/xml] Saving to: ‘info.xml?id=1’
+​
+dpp@bison:~/lift_sbt_prototype$ cat info.xml\?id\=1
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+  &lt;User id="1" firstName="Elwood" ... validated="true" superUser="false"&gt;
+&lt;/User&gt; 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+One more thing about <tt>Box</tt> and <tt>Option</tt>... they lead to less complex, more maintainable code. Even if you didn’t know anything about Scala or Lift, you can read the XML serving code and the console exchange and figure out what happened any why it happened. This is a lot more readable than deeply nested if statements. And if it’s readable, it’s maintainable.
+</div>
+<div class="Standard">
+I hope this is an understandable introduction to Scala’s <tt>Option</tt> class and ’for’ comprehension and how Lift makes use of these tools.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-7.1.html#Next">Previous: Section 7.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.3.html#prev">Next: Section 7.3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

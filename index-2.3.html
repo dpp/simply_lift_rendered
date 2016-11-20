@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.2.html#Next">Previous: Section 2.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.4.html#prev">Next: Section 2.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-2.3">2.3</a> The <tt>ChatServer</tt>
+</h2>
+<div class="Standard">
+The ChatServer code is:
+</div>
+<div class="Standard">
+
+</div>
+<div class="listing">
+<div class="caption">
+ChatServer.scala
+</div>
+<pre class="listing brush: scala">package code
+package comet
+​
+import net.liftweb._
+import http._
+import actor._
+​
+/**
+ * A singleton that provides chat features to all clients.
+ * It's an Actor so it's thread-safe because only one
+ * message will be processed at once.
+ */
+object ChatServer extends LiftActor with ListenerManager {
+  private var msgs = Vector("Welcome") // private state
+​
+  /**
+   * When we update the listeners, what message do we send?
+   * We send the msgs, which is an immutable data structure,
+   * so it can be shared with lots of threads without any
+   * danger or locking.
+   */
+  def createUpdate = msgs
+​
+  /**
+   * process messages that are sent to the Actor.  In
+   * this case, we're looking for Strings that are sent
+   * to the ChatServer.  We append them to our Vector of
+   * messages, and then update all the listeners.
+   */
+  override def lowPriority = {
+    case s: String => msgs :+= s; updateListeners()
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+The <tt>ChatServer</tt> is defined as an <tt>object</tt> rather than a <tt>class</tt>. This makes it a singleton which can be referenced by the name <tt>ChatServer</tt> anywhere in the application. Scala’s singletons differ from Java’s <tt>static</tt> in that the singleton is an instance of an object and that instance can be passed around like any other instance. This is why we can return the <tt>ChatServer</tt> instance from the <tt>registerWith</tt> method in that <tt>Chat</tt> component.
+</div>
+<div class="Standard">
+The ChatServer has private state, a <tt>Vector[String]</tt> representing the list of chat messages. Note that Scala’s type inferencer infers the type of <tt>msgs</tt> so you do not have to explicitly define it.
+</div>
+<div class="Standard">
+The <tt>createUpdate</tt> method generates an update to send to listeners. This update is sent when a listener registers with the <tt>ChatServer</tt> or when the <tt>updateListeners()</tt> method is invoked.
+</div>
+<div class="Standard">
+Finally, the <tt>lowPriority</tt> method defines the messages that this component can handle. If the <tt>ChatServer</tt> receives a <tt>String</tt> as a message, it appends the <tt>String</tt> to the <tt>Vector</tt> of messages and updates listeners.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.2.html#Next">Previous: Section 2.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.4.html#prev">Next: Section 2.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

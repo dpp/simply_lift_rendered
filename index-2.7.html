@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.6.html#Next">Previous: Section 2.6</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-3.html#prev">Next: Chapter 3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-2.7">2.7</a> What you don’t see
+</h2>
+<div class="Standard">
+Excluding imports and comments, there are about 20 lines of Scala code to implement a multi-threaded, multi-user chat application. That’s not a lot.
+</div>
+<div class="Standard">
+The first thing that’s missing is synchronization or other explicit forms of thread locking. The application takes advantage of Actors and immutable data structures, thus the developer can focus on the business logic rather than the threading and locking primatives.
+</div>
+<div class="Standard">
+The next thing that’s missing is routing and controllers and other stuff that you might have to do to wire up Ajax calls and polling for server-side changes (long or otherwise). In our application, we associated behavior with display and Lift took care of the rest (see <a class="Reference" href="index-7.17.html#sec:Page-rewriting">↓</a>).
+</div>
+<div class="Standard">
+We didn’t do anything to explicitly to avoid cross-site scripting in our application. Because Lift takes advantage of Scala’s strong typing and type safety (see <a class="Reference" href="index-7.16.html#sec:Type-safety">↓</a>), Lift knows the difference between a String that must be HTML encoded and an HTML element that’s already properly encoded. By default, Lift applications are resistant to many of the OWASP top 10 security vulnerabilities (see <a class="Reference" href="index-7.18.html#sec:Security">↓</a>).
+</div>
+<div class="Standard">
+This example shows many of Lift’s strengths. Let’s expand the application and see how Lift’s strengths continue to support the development of the application.
+</div>
+<div class="Standard">
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.6.html#Next">Previous: Section 2.6</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-3.html#prev">Next: Chapter 3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

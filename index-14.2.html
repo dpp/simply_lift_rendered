@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-14.1.html#Next">Previous: Section 14.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-14.html">Up: Chapter 14</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-15.html#prev">Next: Chapter 15</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-14.2">14.2</a> Solution
+</h2>
+<div class="Standard">
+The DB.runQuery(sql_query_string) method returns (List[String], List[List[String]]), to put that in a table, your view looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;table class="lift:MySnippet"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th id="my_th"&gt;Field Name&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+  &lt;tr id="my_tr"&gt;&lt;td&gt;An item&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And your snippet uses CSS Selector Transforms (See <a class="Reference" href="index-7.10.html#sec:CSS-Selector-Transforms">↑</a>) and looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object MySnippet {
+  def render = {
+    val (fieldNames: List[String], fieldValues: List[List[String]]) = DB.runQuery(...)
+​
+    "#my_th *" #&gt; fieldNames &amp;
+    "#my_tr *" #&gt; fieldValues.map(values =&gt; "td *" #&gt; values)
+  }
+}
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-14.1.html#Next">Previous: Section 14.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-14.html">Up: Chapter 14</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-15.html#prev">Next: Chapter 15</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

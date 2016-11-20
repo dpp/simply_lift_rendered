@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-3.3.html#Next">Previous: Section 3.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.5.html#prev">Next: Section 3.5</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-3.4">3.4</a> Snippets and Dynamic content
+</h2>
+<div class="Standard">
+Lift templates contain no executable code. They are pure, raw, valid HTML.
+</div>
+<div class="Standard">
+Lift uses snippets to transform sections of the HTML page from static to dynamic. The key word is transform.
+</div>
+<div class="Standard">
+Lift’s snippets are Scala functions: <tt>NodeSeq =&gt; NodeSeq</tt>. A <tt>NodeSeq</tt> is a collection of XML nodes. An snippet can only transform input <tt>NodeSeq</tt> to output <tt>NodeSeq</tt>. Well, not exactly... a snippet may also have side effects including setting cookies, doing database transactions, etc. But the core transformation concept is important. First, it isolates snippet functionality to discrete parts of the page. This means that each snippet, each <tt>NodeSeq =&gt; NodeSeq</tt>, is a component. Second, it means that pages are recursively built, but remain as valid HTML at all times. This means that the developer has to work hard to introduce a cross site scripting vulnerability. Third, the designers don’t have to worry about learning to program anything in order to design HTML pages because the program execution is abstracted away from the HTML rather than embedded in the HTML.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.1">3.4.1</a> Snippets in markup
+</h3>
+<div class="Standard">
+In order to indicate that content is dynamic, the markup contains a snippet invocation. That typically takes the form <tt>class="someclass someothercss lift:mysnippet"</tt>. If a class attribute contains <tt>lift:xxx</tt>, the <tt>xxx</tt> will be resolved to a snippet. The snippet may take attributes. Attributes are encoded like URL parameters... offset by a <tt>?</tt> (question mark), then <tt>name=value</tt>, separted by <tt>?</tt> (question mark), <tt>;</tt> (semicolon) or <tt>&amp;</tt> (ampersand). <tt>name</tt> and <tt>value</tt> are URL encoded.
+</div>
+<div class="Standard">
+You may also invoke snippets with XML tags:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;lift:my_snippet cat="foo"&gt;
+  &lt;div&gt;xxxx&lt;/div&gt;
+&lt;/lift:my_snippet&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Note that the Html5 parser will force all tags to lower case so <tt>&lt;lift:MySnipet&gt;</tt> will become <tt>&lt;lift:mysnippet&gt;</tt>.
+</div>
+<div class="Standard">
+Lift 2.3 will also allow snippet invocation in the form <tt>&lt;div l="mysnippet?param=value"&gt;xxx&lt;/div&gt;</tt>.
+</div>
+<div class="Standard">
+The latter two mechanisms for invoking snippets will not result in valid Html5 templates.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.2">3.4.2</a> Snippet resolution
+</h3>
+<div class="Standard">
+Lift has a very complex set of rules to resolve from snippet name to NodeSeq =&gt; NodeSeq (see <a class="Reference" href="index-23.1.html#sec:Snippet-Resolution">23.1 on page 1↓</a>). For now, the simplest mechanism is to have a <tt>class</tt> or <tt>object</tt> in the <tt>snippet</tt> package that matches the snippet name.
+</div>
+<div class="Standard">
+So <tt>lift:HelloWorld</tt> will look for the <tt>code.snippet.HelloWorld</tt> class and invoke the <tt>render</tt> method.
+</div>
+<div class="Standard">
+<tt>lift:CatFood.fruitbat</tt> will look for the <tt>code.snippet.CatFood</tt> class and invoke the <tt>fruitbat</tt> method.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.3">3.4.3</a> Dynamic Example
+</h3>
+<div class="Standard">
+Let’s look at the <tt>dynamic.html</tt> page:
+</div>
+<div class="listing">
+<div class="caption">
+dynamic.html
+</div>
+<pre class="listing brush: xml">&lt;!DOCTYPE html>
+&lt;html>
+  &lt;head>
+    &lt;meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    &lt;title>Dynamic&lt;/title>
+  &lt;/head>
+  &lt;body class="lift:content_id=main">
+    &lt;div id="main" class="lift:surround?with=default;at=content">
+      This page has dynamic content.
+      The current time is &lt;span class="lift:HelloWorld">now&lt;/span>.
+    &lt;/div>
+  &lt;/body>
+&lt;/html>
+​
+</pre>
+</div>
+<div class="Standard">
+This template invokes the <tt>HelloWorld</tt> snippet defined in <tt>HelloWorld.scala</tt>:
+</div>
+<div class="listing">
+<div class="caption">
+HelloWorld.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import lib._
+​
+import net.liftweb._
+import util.Helpers._
+import common._
+import java.util.Date
+​
+class HelloWorld {
+  lazy val date: Box[Date] = DependencyFactory.inject[Date] // inject the date
+​
+  def render = "* *" #> date.map(_.toString)
+}
+​
+</pre>
+</div>
+<div class="Standard">
+And the dynamic content becomes:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;span&gt;Thu Dec 30 16:31:13 PST 2010&lt;/span&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The <tt>HelloWorld</tt> snippet code is simple.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">lazy val date: Box[Date] = DependencyFactory.inject[Date]
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Uses dependency injection (see <a class="Reference" href="index-8.2.html#sec:Dependency-Injection">8.2 on page 1↓</a>) to get a <tt>Date</tt> instance.
+</div>
+<div class="Standard">
+Then:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">def render = "* *" #&gt; date.map(_.toString)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Creates a CSS Selector Transform (see <a class="Reference" href="index-7.10.html#sec:CSS-Selector-Transforms">7.10 on page 1↓</a>) that inserts the <tt>String</tt> value of the injected <tt>Date</tt> into the markup, in this case the <tt>&lt;span&gt;</tt> that invoked the snippet.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.4">3.4.4</a> Embedded Example
+</h3>
+<div class="Standard">
+We’ve seen how we can embed a template using: <tt>&lt;div class="lift:embed?what=_embedme"&gt;xxx&lt;/div&gt;</tt>.
+</div>
+<div class="Standard">
+Let’s look at the <tt>_embedme.html</tt> template:
+</div>
+<div class="listing">
+<pre class="listing brush: xml">&lt;!DOCTYPE html>
+&lt;html>
+  &lt;head>
+    &lt;meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    &lt;title>I'm embeded&lt;/title>
+  &lt;/head>
+  &lt;body class="lift:content_id=main">
+    &lt;div id="main">
+      Howdy.  I'm a bit of embedded content.  I was 
+      embedded from &lt;span class="lift:Embedded.from">???&lt;/span>.
+    &lt;/div>
+  &lt;/body>
+&lt;/html>
+​
+</pre>
+</div>
+<div class="Standard">
+And the invoked <tt>Embedded.scala</tt> program:
+</div>
+<div class="listing">
+<div class="caption">
+Embedded.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import lib._
+​
+import net.liftweb._
+import http._
+import util.Helpers._
+import common._
+import java.util.Date
+​
+/**
+ * A snippet that lists the name of the current page
+ */
+object Embedded {
+  def from = "*" #> S.location.map(_.name)
+}
+​
+</pre>
+</div>
+<div class="Standard">
+The template invokes the <tt>from</tt> method on the <tt>Embedded</tt> snippet. In this case, the snippet is an <tt>object</tt> singleton because it does not take any constructor parameters and has no instance variabled.
+</div>
+<div class="Standard">
+The <tt>from</tt> method:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  def from = "*" #&gt; S.location.map(_.name)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Creates a CSS Selector Transform that replaces the contents with the <tt>name</tt> of the current <tt>location</tt>.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.5">3.4.5</a> <a class="Label" name="sub:Param-Example"> </a>Param Example
+</h3>
+<div class="Standard">
+Above, we saw how to create a <tt>Loc[ParamInfo]</tt> to capture URL parameters. Let’s look at the <tt>/param/xxx</tt> page and see how we can access the parameters:
+</div>
+<div class="listing">
+<div class="caption">
+param.html
+</div>
+<pre class="listing brush: xml">&lt;!DOCTYPE html>
+&lt;html>
+  &lt;head>
+    &lt;meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    &lt;title>Param&lt;/title>
+  &lt;/head>
+  &lt;body class="lift:content_id=main">
+    &lt;div id="main" class="lift:surround?with=default;at=content">
+      &lt;div>
+        Thanks for visiting this page.  The parameter is
+        &lt;span class="lift:ShowParam">???&lt;/span>.
+      &lt;/div>
+      
+      &lt;div>
+        Another way to get the param: &lt;span class="lift:Param">???&lt;/span>.
+      &lt;/div>
+      
+    &lt;/div>
+  &lt;/body>
+&lt;/html>
+​
+</pre>
+</div>
+<div class="Standard">
+And let’s look at two different snippets that can access the <tt>ParamInfo</tt> for the page:
+</div>
+<div class="listing">
+<div class="caption">
+Param.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import lib._
+​
+import net.liftweb._
+import util.Helpers._
+import common._
+import http._
+import sitemap._
+import java.util.Date
+​
+// capture the page parameter information
+case class ParamInfo(theParam: String)
+​
+// a snippet that takes the page parameter information
+class ShowParam(pi: ParamInfo)  {
+  def render = "*" #> pi.theParam
+}
+​
+object Param {
+  // Create a menu for /param/somedata
+  val menu = Menu.param[ParamInfo]("Param", "Param", 
+                                   s => Full(ParamInfo(s)), 
+                                   pi => pi.theParam) / "param"
+  lazy val loc = menu.toLoc
+​
+  def render = "*" #> loc.currentValue.map(_.theParam)
+}
+</pre>
+</div>
+<div class="Standard">
+Each snippet has a <tt>render</tt> method. However, the <tt>ShowParam</tt> class takes a constructor parameter which contains the <tt>ParamInfo</tt> from the current <tt>Loc[_]</tt>. If the current <tt>Loc</tt> does not have the type parameter <tt>ParamInfo</tt>, no instance of <tt>ShowParam</tt> would be created and the snippet could not be resolved. But we do have a Loc[ParamInfo], so Lift constructs a <tt>ShowParam</tt> with the <tt>Loc</tt>’s <tt>currentValue</tt> and then the <tt>render</tt> method is invoked and it returns a CSS Selector Transform which is a <tt>NodeSeq =&gt; NodeSeq</tt>.
+</div>
+<div class="Standard">
+The <tt>object Param</tt>’s <tt>render</tt> method accesses the <tt>Loc[ParamInfo]</tt> directly. The <tt>render</tt> method gets the <tt>Loc</tt>’s <tt>currentValue</tt> and uses that to calculate the return value, the CSS Selector Transform.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.6">3.4.6</a> Recursive
+</h3>
+<div class="Standard">
+Lift’s snippets are evaluated lazily. This means that the body of the snippet is not executed until the outer snippet is executed which allows you to return markup from a snippet that itself contains a snippet or alternatively, choose part of the snippet body that itself contains a snippet invocation. For example, in this markup:
+</div>
+<div class="listing">
+<div class="caption">
+recurse.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    This demonstrates Lift's recursive snippets
+  &lt;/div>
+​
+  &lt;div class="lift:Recurse">
+    &lt;div id="first" class="lift:FirstTemplate">
+      The first template.
+    &lt;/div>
+​
+    &lt;div id="second" class="lift:SecondTemplate">
+      The second template.
+    &lt;/div>
+  &lt;/div>
+  
+  &lt;div>
+    &lt;ul>
+      &lt;li>Recursive: &lt;a href="/recurse/one">First snippet&lt;/a>&lt;/li>
+      &lt;li>Recursive: &lt;a href="/recurse/two">Second snippet&lt;/a>&lt;/li>
+      &lt;li>Recursive: &lt;a href="/recurse/both">Both snippets&lt;/a>&lt;/li>
+    &lt;/ul>
+  &lt;/div>
+&lt;/div>
+​
+​
+</pre>
+</div>
+<div class="Standard">
+The <tt>Recurse</tt> snippet chooses one of both of the <tt>&lt;div&gt;</tt>’s, each of which invokes a snippet themselves. Here’s the Scala:
+</div>
+<div class="listing">
+<div class="caption">
+Recurse.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import lib._
+​
+import net.liftweb._
+import util._
+import Helpers._
+import http._
+import scala.xml.NodeSeq
+​
+/**
+ * The choices
+ */
+sealed trait Which
+final case class First() extends Which
+final case class Second() extends Which
+final case class Both() extends Which
+​
+/**
+ * Choose one or both of the templates
+ */
+class Recurse(which: Which) {
+  // choose the template
+  def render = which match {
+    case First() => "#first ^^" #> "*" // choose only the first template
+    case Second() => "#second ^^" #> "*" // choose only the second template
+    case Both() => ClearClearable // it's a passthru
+  }
+}
+​
+/**
+ * The first template snippet
+ */
+object FirstTemplate {
+  // it's a passthru, but has the notice side effect
+  def render(in: NodeSeq) = {
+    S.notice("First Template Snippet executed")
+    in
+  }
+}
+​
+/**
+ * The second template snippet
+ */
+object SecondTemplate {
+  // it's a passthru, but has the notice side effect
+  def render(in: NodeSeq) = {
+    S.notice("Second Template Snippet executed")
+    in
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+Depending on the value of <tt>which</tt>, one or both parts of the markup will be chosen. And each part of the markup itself invokes a snippet which displays a notice and passes the markup through.
+</div>
+<div class="Standard">
+Using this technique, you can have a snippet that chooses one or many different snippets or returns a <tt>lift:embed</tt> snippet, thus allowing for very dynamic markup generation.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.4.7">3.4.7</a> Summary
+</h3>
+<div class="Standard">
+We’ve seen some simple examples of Lift’s snippet mechanism used to generate dynamic content. You can read more on snippets (see <a class="Reference" href="index-7.1.html#sec:Snippets">7.1 on page 1↓</a>).
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-3.3.html#Next">Previous: Section 3.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.5.html#prev">Next: Section 3.5</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.2.html#Next">Previous: Section 13.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.4.html#prev">Next: Section 13.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-13.3">13.3</a> Creating the view
+</h2>
+<div class="Standard">
+Next you have to create a file that corresponds to the path defined in the <tt>SiteMap</tt>. So, let’s look at the <tt>src/main/webapp/index.html</tt> file:
+</div>
+<div class="listing">
+<div class="caption">
+index.html
+</div>
+<pre class="listing brush: scala"><!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <title>Home</title>
+  </head>
+  <body class="lift:content_id=main">
+    <div id="main" class="lift:surround?with=default&at=content">
+      <div>
+        Hi, I'm a page that contains the time:
+        <span class="lift:TimeNow">??? some time</span>.
+      </div>
+​
+      <div>
+        And a button: <button class="lift:ClickMe">Click Me</button>.
+      </div>
+    </div>
+  </body>
+</html>
+​
+</pre>
+</div>
+<div class="Standard">
+The page is valid HTML5. <tt>&lt;body class="lift:content_id=main"&gt;</tt> says “ignore everything on this page except the Element with id ’main’.”
+</div>
+<div class="Standard">
+<tt>&lt;div id="main" class="lift:surround?with=default&amp;at=content"&gt;</tt> says “Wrap the default page chrome around this Element.”
+</div>
+<div class="Standard">
+<tt>&lt;span class="lift:TimeNow"&gt;??? some time&lt;/span&gt;</tt> says “Find the <tt>TimeNow</tt> snippet and transform this Element with the rules contained in that snippet.” See <a class="Reference" href="index-7.1.html#sec:Snippets">7.1 on page 1↑</a>. The result will be <tt>&lt;span&gt;Fri Jan 21 11:30:34 PST 2011&lt;/span&gt;</tt>
+</div>
+<div class="Standard">
+So, that’s simple. You tell Lift what Snippet to use to transform your static content into dynamic content.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.2.html#Next">Previous: Section 13.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.4.html#prev">Next: Section 13.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

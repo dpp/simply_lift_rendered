@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-21.html#Next">Previous: Chapter 21</a></span>
+<span class="up"><a class="up" href="index-Part-III.html">Up: Part III</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-23.html#prev">Next: Chapter 23</a></span>
+</div>
+<h1 class="Chapter">
+<a class="toc" name="toc-Chapter-22">22</a> How Lift does Comet
+</h1>
+<div class="Standard">
+I can speak to Lift’s Comet Architecture which was selected by Novell to power their Pulse product after they evaluated a number of different technologies.
+</div>
+<div class="Standard">
+Lift’s Comet implementation uses a single HTTP connection to poll for changes to an arbitrary number of components on the page. Each component has a version number. The long poll includes the version number and the component GUID. On the server side, a listener is attached to all of the GUIDs listed in the long poll requests. If any of the components has a higher version number (or the version number increases during the period of the long poll), the deltas (a set of JavaScript describing the change from each version) is sent to the client. The deltas are applied and the version number on the client is set to the highest version number for the change set.
+</div>
+<div class="Standard">
+Lift integrates long polling with session management so that if a second request comes into the same URL during a long poll, the long poll is terminated to avoid connection starvation (most browsers have a maximum of 2 HTTP connections per named server). Lift also supports DNS wild-carded servers for long poll requests such that each tab in the browser can do long polling against a different DNS wildcarded server. This avoids the connection starvation issues.
+</div>
+<div class="Standard">
+Lift dynamically detects the container the Servlet is running in and on Jetty 6 &amp; 7 and (soon) Glassfish, Lift will use the platform’s "continuations" implementation to avoid using a thread during the long poll.
+</div>
+<div class="Standard">
+Lift’s JavaScript can sit on top of jQuery and YUI (and could sit on top of Prototype/Scriptaculous as well.) The actual polling code includes back-off on connection failures and other "graceful" ways of dealing with transient connection failures.
+</div>
+<div class="Standard">
+I’ve looked at Atmosphere and CometD (both JVM-oriented Comet technologies). Neither had (at the time I evaluated them) support for multiple components per page or connection starvation avoidance.
+</div>
+<div class="Standard">
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-21.html#Next">Previous: Chapter 21</a></span>
+<span class="up"><a class="up" href="index-Part-III.html">Up: Part III</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-23.html#prev">Next: Chapter 23</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

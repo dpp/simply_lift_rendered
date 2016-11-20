@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.3.html#Next">Previous: Section 8.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-9.html#prev">Next: Chapter 9</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-8.4">8.4</a> HtmlProperties, XHTML and HTML5
+</h2>
+<div class="Standard">
+Lift unifies many aspects of parsing and displaying the HTML page in a single trait, <tt>HtmlProperties</tt>.
+</div>
+<div class="Standard">
+HtmlProperties defines, on a session-by-session (and even a request-by-request) basis, the way that templates are parsed and the way that Scala’s <tt>NodeSeq</tt> is converted into valid HTML output. The properties on <tt>HtmlProperties</tt> are:
+</div>
+<ul>
+<li>
+<tt>docType</tt> - the DocType for the HTML page, e.g., <tt>&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;</tt> or <tt>&lt;!DOCTYPE html&gt;</tt>
+</li>
+<li>
+<tt>encoding</tt> - the page’s encoding, e.g., <tt>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</tt>
+</li>
+<li>
+contentType - the setting of the Content-Type response header, e.g., <tt>application/xhtml+xml; charset=utf-8</tt> or <tt>text/html; charset=utf-8</tt>
+</li>
+<li>
+<tt>htmlOutputHeader</tt> - calculates the way to combine the <tt>docType</tt> and <tt>encoding</tt> (this is important for IE6 support where encoding goes after docType).
+</li>
+<li>
+<tt>htmlParser</tt> - a function that converts an <tt>InputStream</tt> to a <tt>Box[NodeSeq]</tt>. This is used by Lift to parse templates.
+</li>
+<li>
+<tt>htmlWriter</tt> - a function that writes a <tt>NodeSeq</tt> to a <tt>Writer</tt>. This is used by Lift to convert the internal XML representation of a page to a stream of bytes representing an HTML page.
+</li>
+<li>
+<tt>html5FormsSupport</tt> - a flag indicating whether the current browser supports HTML5 forms.
+</li>
+<li>
+<tt>maxOpenRequests</tt> - the maximum number of concurrent HTTP requests the browser supports to a named host.
+</li>
+<li>
+<tt>userAgent</tt> - the User-Agent string sent from the browser.
+</li>
+
+</ul>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.4.1">8.4.1</a> XHTML via <tt>OldHtmlProperties</tt>
+</h3>
+<div class="Standard">
+The default properties that keep compability with the disparate LiftRules used to calculate DocType and Encoding. Uses the <tt>PCDataXmlParser</tt> parser which requires well-formed XML files. Output is generally XHTML via <tt>AltXML.toXML</tt>, but cerain tags (e.g., <tt>&lt;br&gt;</tt>) are written in IE6/IE7 friendly ways.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.4.2">8.4.2</a> HTML5 via <tt>Html5Properties</tt>
+</h3>
+<div class="Standard">
+Prior to Lift 2.2, Lift always emitted XHTML and by default set the Content-Type header to <tt>application/xhtml+xml; charset=utf-8</tt>. This continues to be Lift’s default behavior. It turns out that most browsers, even modern ones (Firefox, Chrome and Safari) had issues with XHTML. Further, XHTML limited the behavior of certain JavaScript libraries.
+</div>
+<div class="Standard">
+By invoking <tt>LiftRules.htmlProperties.default.set((r: Req) =&gt; new Html5Properties(r.userAgent))</tt> in Boot.scala, you can set Lift to full HTML5 support. Lift uses the <a class="URL" href="http://about.validator.nu/htmlparser/">nu.validator</a> HTML parser and emits the correct DocType and response headers such that all tested browsers (IE6+, Firefox 2+, Safari 2+, Chrome 1+) render pages correctly.
+</div>
+<div class="Standard">
+Because the HTML5 parser is different from the standard XML parser, you will need to adjust your existing templates in the following ways:
+</div>
+<ul>
+<li>
+All tags are converted to lower case. This means the <tt>&lt;lift:FooBar/&gt;</tt> gets converted to <tt>&lt;lift:foobar/&gt;</tt> I advise converting to designer friendly where possible (e.g., <tt>&lt;div class="lift:FooBar"&gt;&lt;/div&gt;</tt>).
+</li>
+<li>
+Tags of the format <tt>&lt;div/&gt;</tt> and <tt>&lt;my_thing:bind/&gt;</tt> are not legal. They must be converted to <tt>&lt;div&gt;&lt;/div&gt;</tt> and <tt>&lt;my_thing:bind&gt;&lt;/my_thing:bind&gt;</tt>. Unfortunately, the parser is very forgiving so rather than barking about the lack of closing tag, the parser will nest things in unexpected ways.
+</li>
+<li>
+There are some tags that the parser "ensures". For example a <tt>&lt;tr&gt;</tt>, <tt>&lt;thead&gt;</tt>, or <tt>&lt;tbody&gt;</tt> tag <b>must</b> be the first tag inside <tt>&lt;table&gt;</tt>. This breaks the <tt><br/>
+&lt;table&gt;&lt;mysnippet:line&gt;<br/>
+&lt;tr&gt;&lt;td&gt;&lt;mysnippet:bind_here&gt;&lt;/mysnippet:bind_here&gt;&lt;/td&gt;&lt;/tr&gt;<br/>
+&lt;/mysnippet:line&gt;&lt;table&gt;</tt> <br/>
+paradigm. You can get the desired behavior with<br/>
+<tt>&lt;table&gt;&lt;tr lift:bind="mysnippet:line"&gt;&lt;td&gt;&lt;mysnippet:bind_here&gt;&lt;/mysnippet:bind_here&gt;&lt;/td&gt;&lt;/tr&gt;&lt;table&gt;</tt>.
+</li>
+
+</ul>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.4.3">8.4.3</a> Changing behavior mid-session or mid-request
+</h3>
+<div class="Standard">
+You can change the behavior of HtmlProperties mid-session or mid-request. <tt>LiftSession.sessionHtmlProperties</tt> is a <tt>SessionVar</tt> that contains the <tt>HtmlProperties</tt> for the session. <tt>LiftSession.requestHtmlProperties</tt> is a <tt>TranientRequestVar</tt> containing the <tt>HtmlProperties</tt> for the request. At the begining of the request, <tt>requestHtmlProperties</tt> is set to the value of <tt>sessionHtmlProperties</tt>. You can alter a property for the duration of the request using:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">for {
+  session &lt;- S.session
+} session.requestHtmlProperties.set(session.
+          requestHtmlProperties.is.setDocType(() =&gt; 
+                                   Full("&lt;!DOCTYPE moose&gt;")))
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.3.html#Next">Previous: Section 8.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-9.html#prev">Next: Chapter 9</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

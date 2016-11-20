@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-18.html#Next">Previous: Chapter 18</a></span>
+<span class="up"><a class="up" href="index-Chapter-18.html">Up: Chapter 18</a></span>
+<span class="next"><a class="next" name="Next" href="index-18.2.html#prev">Next: Section 18.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-18.1">18.1</a> Problem
+</h2>
+<div class="Standard">
+I’m evaluating Lift and one thing I miss, or cannot see how toimplement, is the ability to have the locale determined from an URI-pattern. In Struts2 I have:
+</div>
+<div class="Standard">
+<tt><div class="listing">
+<pre class="listing brush: xml">namespace="/{request_locale}"
+</pre>
+</div>
+</tt>
+</div>
+<div class="Standard">
+So I can have an action (restful) invoked on an <tt>URI=/no/companies/company/1</tt> and it will call my CompanyAction with <tt>id=1</tt> and the locale
+</div>
+<div class="Standard">
+set to <tt>no</tt> If called from <tt>URI=/en/companies/company/1</tt> it will callthe same <tt>CompanyAction</tt> but the locale will be set to "<tt>en</tt>".
+</div>
+<div class="Standard">
+So my question is: Is it possible to teach Lift to retrieve the locale based on some uri-pattern, so that it will try to resolve my <tt>*.xhtml</tt> after the <tt>/{request_locale}</tt> part?
+</div>
+<div class="Standard">
+<tt>/no/index.xhtml</tt>
+</div>
+<div class="Standard">
+<tt>/en/index.xhtml</tt>
+</div>
+<div class="Standard">
+Should then map to the same templates but with different locale.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-18.html#Next">Previous: Chapter 18</a></span>
+<span class="up"><a class="up" href="index-Chapter-18.html">Up: Chapter 18</a></span>
+<span class="next"><a class="next" name="Next" href="index-18.2.html#prev">Next: Section 18.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

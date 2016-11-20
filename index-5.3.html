@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.2.html#Next">Previous: Section 5.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.4.html#prev">Next: Section 5.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-5.3">5.3</a> Making it easier with <tt>RestHelper</tt>
+</h2>
+<div class="Standard">
+The above example shows you how Lift deals with REST calls. However, it’s a tad verbose. Lift’s <tt>RestHelper</tt> trait contains a lot of very helpful shortcuts that make code more concise, easier to read and easier to maintain. Let’s look at a bunch of examples and then we’ll work through each one:
+</div>
+<div class="listing">
+<div class="caption">
+BasicWithHelper.scala
+</div>
+<pre class="listing brush: scala">package code
+package lib
+​
+import model._
+​
+import net.liftweb._
+import common._
+import http._
+import rest._
+import json._
+import scala.xml._
+​
+/**
+ * A simple example of a REST style interface
+ * using the basic Lift tools
+ */
+object BasicWithHelper extends RestHelper {
+  /*
+   * Serve the URL, but have a helpful error message when you
+   * return a 404 if the item is not found
+   */
+  serve {
+    case "simple3" :: "item" :: itemId :: Nil JsonGet _ =>
+      for {
+        // find the item, and if it's not found,
+        // return a nice message for the 404
+        item <- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: JValue
+​
+    case "simple3" :: "item" :: itemId :: Nil XmlGet _ =>
+      for {
+        item <- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: Node
+  }
+​
+​
+  
+  serve {
+    // Prefix notation
+    case JsonGet("simple4" :: "item" :: Item(item) :: Nil, _) =>
+      // no need to explicitly create a LiftResponse
+      // Just make it JSON and RestHelper does the rest
+      item: JValue
+​
+    // infix notation
+    case "simple4" :: "item" :: Item(item) :: Nil XmlGet _ =>
+      item: Node
+  }
+​
+  // serve a bunch of items given a single prefix
+  serve ( "simple5" / "item" prefix {
+    // all the inventory
+    case Nil JsonGet _ => Item.inventoryItems: JValue
+    case Nil XmlGet _ => Item.inventoryItems: Node
+​
+    // a particular item
+    case Item(item) :: Nil JsonGet _ => item: JValue
+    case Item(item) :: Nil XmlGet _ => item: Node
+  })
+​
+  /**
+   * Here's how we convert from an Item
+   * to JSON or XML depending on the request's
+   * Accepts header
+   */
+  implicit def itemToResponseByAccepts: JxCvtPF[Item] = {
+    case (JsonSelect, c, _) => c: JValue
+    case (XmlSelect, c, _) => c: Node
+  }
+​
+  /**
+   * serve the response by returning an item
+   * (or a Box[Item]) and let RestHelper determine
+   * the conversion to a LiftResponse using
+   * the itemToResponseByAccepts partial function
+   */
+  serveJx[Item] {
+    case "simple6" :: "item" :: Item(item) :: Nil Get _ => item
+    case "simple6" :: "item" :: "other" :: item :: Nil Get _ => 
+      Item.find(item) ?~ "The item you're looking for isn't here"
+  }
+​
+  /**
+   * Same as the serveJx example above, but we've
+   * used prefixJx to avoid having to copy the path
+   * prefix over and over again
+   */
+  serveJx[Item] {
+    "simple7" / "item" prefixJx {
+      case Item(item) :: Nil Get _ => item
+      case "other" :: item :: Nil Get _ => 
+        Item.find(item) ?~ "The item you're looking for isn't here"
+    }
+  }
+  
+}
+</pre>
+</div>
+<div class="Standard">
+The first thing is how we declare and register the <tt>RestHelper</tt>-based service:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">/**
+ * A simple example of a REST style interface
+ * using the basic Lift tools
+ */
+object BasicWithHelper extends RestHelper {
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Our <tt>BaseicWithHelper</tt> singleton extends the <tt>net.liftweb.http.rest.RestHelper</tt> trait. We register the dispatch in <tt>Boot.scala</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    LiftRules.statelessDispatchTable.append(BasicWithHelper)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This means that the whole <tt>BasicWithHelper</tt> singleton is a <tt>PartialFunction[Req, () =&gt; Box[LiftResponse]]</tt> that aggregates all the sub-patterns contained inside it. We defined the sub-patterns in a <tt>serve</tt> block which contains the pattern to match. For example:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  serve {
+    case "simple3" :: "item" :: itemId :: Nil JsonGet _ =&gt;
+      for {
+        // find the item, and if it’s not found,
+        // return a nice message for the 404
+        item &lt;- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: JValue
+​
+    case "simple3" :: "item" :: itemId :: Nil XmlGet _ =&gt;
+      for {
+        item &lt;- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: Node
+  }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Let’s break this down further:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">case "simple3" :: "item" :: itemId :: Nil JsonGet _ =&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The above matches <tt>/simple3/item/</tt>xxx where xxx is extracted to the <tt>itemId</tt> variable. The request must also have an <tt>Accepts</tt> header that calls for JSON.
+</div>
+<div class="Standard">
+If the pattern matches, execute the following code:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">      for {
+        // find the item, and if it’s not found,
+        // return a nice message for the 404
+        item &lt;- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: JValue
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Some things to notice, we didn’t explicitly create a function that returns a <tt>Box[LiftResponse]</tt>. Instead, the type is <tt>Box[JValue]</tt>. <tt>RestHelper</tt> provides implicit conversions from <tt>Box[JValue]</tt> to <tt>() =&gt; Box[LiftResponse]</tt>. Specifically, if the <tt>Box</tt> is a <tt>Failure</tt>, <tt>RestHelper</tt> will generate a 404 response with the <tt>Failure</tt> message as the 404’s body. If the <tt>Box</tt> is <tt>Full</tt>, <tt>RestHelper</tt> will create a <tt>JsonResponse</tt> with the value in the payload. Let’s take a look at the two cases:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple3/item/12999
+Item Not Found
+​
+dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple3/item/1234
+{
+  "id":"1234",
+  "name":"Cat Food",
+  "description":"Yummy, tasty cat food",
+  "price":4.25,
+  "taxable":true,
+  "weightInGrams":1000,
+  "qnty":4
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The XML example is pretty much the same, except we coerse the response to <tt>Box[Node]</tt> which <tt>RestHelper</tt> converts into an <tt>XmlResponse</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    case "simple3" :: "item" :: itemId :: Nil XmlGet _ =&gt;
+      for {
+        item &lt;- Item.find(itemId) ?~ "Item Not Found"
+      } yield item: Node
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Which results in the following:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl -i -H "Accept: application/xml" http://localhost:8080/simple3/item/1234
+HTTP/1.1 200 OK
+Expires: Wed, 9 Mar 2011 01:48:38 UTC
+Content-Length: 230
+Cache-Control: no-cache; private; no-store
+Content-Type: text/xml; charset=utf-8
+Pragma: no-cache
+Date: Wed, 9 Mar 2011 01:48:38 UTC
+X-Lift-Version: Unknown Lift Version
+Server: Jetty(6.1.22)
+​
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;item&gt;
+  &lt;id&gt;1234&lt;/id&gt;
+  &lt;name&gt;Cat Food&lt;/name&gt;
+  &lt;description&gt;Yummy, tasty cat food&lt;/description&gt;
+  &lt;price&gt;4.25&lt;/price&gt;
+  &lt;taxable&gt;true&lt;/taxable&gt;
+  &lt;weightInGrams&gt;1000&lt;/weightInGrams&gt;
+  &lt;qnty&gt;4&lt;/qnty&gt;
+&lt;/item&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Okay... that’s simpler because we define stuff in the <tt>serve</tt> block and the conversions from <tt>JValue</tt> and <tt>Node</tt> to the right response types is taken care of. Just to be explicit about where the implicit conversions are defined, they’re in the <tt>Item</tt> singleton:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  /**
+   * Convert an item to XML
+   */
+  implicit def toXml(item: Item): Node = 
+    &lt;item&gt;{Xml.toXml(item)}&lt;/item&gt;
+​
+​
+  /**
+   * Convert the item to JSON format.  This is
+   * implicit and in the companion object, so
+   * an Item can be returned easily from a JSON call
+   */
+  implicit def toJson(item: Item): JValue = 
+    Extraction.decompose(item)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Okay, so, yippee skippy, we can do simpler REST. Let’s keep looking at examples of how we can make it even simpler. This example uses extractors rather than doing the explicit <tt>Item.find</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  serve {
+    // Prefix notation
+    case JsonGet("simple4" :: "item" :: Item(item) :: Nil, _) =&gt;
+      // no need to explicitly create a LiftResponse
+      // Just make it JSON and RestHelper does the rest
+      item: JValue
+​
+    // infix notation
+    case "simple4" :: "item" :: Item(item) :: Nil XmlGet _ =&gt;
+      item: Node
+  }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+If you like DRY and don’t want to keep repeating the same path prefixes, you can use <tt>prefix</tt>, for example:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  // serve a bunch of items given a single prefix
+  serve ( "simple5" / "item" prefix {
+    // all the inventory
+    case Nil JsonGet _ =&gt; Item.inventoryItems: JValue
+    case Nil XmlGet _ =&gt; Item.inventoryItems: Node
+​
+    // a particular item
+    case Item(item) :: Nil JsonGet _ =&gt; item: JValue
+    case Item(item) :: Nil XmlGet _ =&gt; item: Node
+  })
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The above code will list all the items in response to <tt>/simple5/item</tt> and will serve a specific item in response to <tt>/simple5/item/1234</tt>, as we see in:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple5/item
+[{
+  "id":"1234",
+  "name":"Cat Food",
+  "description":"Yummy, tasty cat food",
+  "price":4.25,
+  "taxable":true,
+  "weightInGrams":1000,
+  "qnty":4
+},
+...
+,{
+  "id":"1237",
+  "name":"Sloth Food",
+  "description":"Slow, slow sloth food",
+  "price":18.33,
+  "taxable":true,
+  "weightInGrams":750,
+  "qnty":62
+}]
+​
+dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple5/item/1237
+{
+  "id":"1237",
+  "name":"Sloth Food",
+  "description":"Slow, slow sloth food",
+  "price":18.33,
+  "taxable":true,
+  "weightInGrams":750,
+  "qnty":62
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In the above examples, we’ve explicitly coersed the results into a <tt>JValue</tt> or <tt>Node</tt> depending on the request type. With Lift, it’s possible to define a conversion from a given type to response types (the default response types are JSON and XML) based on the request type and then define the request patterns to match and <tt>RestHelper</tt> takes care of the rest (so to speak.) Let’s define the conversion from <tt>Item</tt> to <tt>JValue</tt> and <tt>Node</tt> (note the <tt>implicit</tt> keyword, that says that the conversion is available to <tt>serveJx</tt> statements:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  implicit def itemToResponseByAccepts: JxCvtPF[Item] = {
+    case (JsonSelect, c, _) =&gt; c: JValue
+    case (XmlSelect, c, _) =&gt; c: Node
+  }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This is pretty straight forward. If it’s a <tt>JsonSelect</tt>, return a <tt>JValue</tt> and if it’s an <tt>XmlSelect</tt>, convert to a <tt>Node</tt>.
+</div>
+<div class="Standard">
+This is used in the <tt>serveJx</tt> statement:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  serveJx[Item] {
+    case "simple6" :: "item" :: Item(item) :: Nil Get _ =&gt; item
+    case "simple6" :: "item" :: "other" :: item :: Nil Get _ =&gt; 
+      Item.find(item) ?~ "The item you’re looking for isn’t here"
+  }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+So <tt>/simple6/item/1234</tt> will match and result in an <tt>Item</tt> being returned and based on the above implicit conversion, we turn the <tt>Item</tt> into a <tt>JValue</tt> or <tt>Node</tt> depending on the <tt>Accepts</tt> header and then convert that to a <tt>() =&gt; Box[LiftResponse]</tt>. Let’s see what <tt>curl</tt> has to say about it:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple6/item/1237
+{
+  "id":"1237",
+  "name":"Sloth Food",
+  "description":"Slow, slow sloth food",
+  "price":18.33,
+  "taxable":true,
+  "weightInGrams":750,
+  "qnty":62
+}
+​
+dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl -H "Accept: application/xml" http://localhost:8080/simple6/item/1234
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;item&gt;
+  &lt;id&gt;1234&lt;/id&gt;
+  &lt;name&gt;Cat Food&lt;/name&gt;
+  &lt;description&gt;Yummy, tasty cat food&lt;/description&gt;
+  &lt;price&gt;4.25&lt;/price&gt;
+  &lt;taxable&gt;true&lt;/taxable&gt;
+  &lt;weightInGrams&gt;1000&lt;/weightInGrams&gt;
+  &lt;qnty&gt;4&lt;/qnty&gt;
+&lt;/item&gt;  
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Note also that <tt>/simple6/item/other/1234</tt> does the right thing. This is because the path is 4 elements long, so it won’t match the first part of the pattern, but does match the second part of the pattern.
+</div>
+<div class="Standard">
+Finally, let’s combine <tt>serveJx</tt> and it’s DRY helper, <tt>prefixJx</tt>. 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  serveJx[Item] {
+    "simple7" / "item" prefixJx {
+      case Item(item) :: Nil Get _ =&gt; item
+      case "other" :: item :: Nil Get _ =&gt; 
+        Item.find(item) ?~ "The item you’re looking for isn’t here"
+    }
+  }
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.2.html#Next">Previous: Section 5.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.4.html#prev">Next: Section 5.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

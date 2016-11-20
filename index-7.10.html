@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-7.9.html#Next">Previous: Section 7.9</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.11.html#prev">Next: Section 7.11</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-7.10">7.10</a> CSS Selector Transforms<a class="Label" name="sec:CSS-Selector-Transforms"> </a>
+</h2>
+<div class="Standard">
+Lift 2.2-M1 introduced a new mechanism for transforming XHTML: CSS Selector Transforms (<tt>CssBindFunc</tt>). The new mechanism provides a subset of CSS selectors that can be used to transform <tt>NodeSeq =&gt; NodeSeq</tt>. Examples of this feature include:
+</div>
+<ul>
+<li>
+<tt>"#name" #&gt; userName</tt> // replace the element with the id name with the variable userName 
+</li>
+<li>
+<tt>"#chat_lines *" #&gt; listOfChats</tt> // replace the content of chat_lines with each element of listOfChats 
+</li>
+<li>
+<tt>".pretty *" #&gt; &lt;b&gt;Unicorn&lt;/b&gt;</tt> // each element with CSS class pretty, replace content with &lt;b&gt;Unicorn&lt;/b&gt;
+</li>
+<li>
+<tt>"dog=cat [href]" #&gt; "http://dogscape.com"</tt> // set the href attribute of all elements with the dog attribute set to cat 
+</li>
+<li>
+<tt>"#name" #&gt; userName &amp; "#age" #&gt; userAge</tt> // set name to userName and age to userAge
+</li>
+<li>
+<tt>"li *" #&gt; userName &amp; "li [class]" #&gt; "foo"</tt> // set the contents of all &lt;li&gt; element with username and class to foo
+</li>
+<li>
+<tt>"li *" #&gt; userName &amp; "li [class+]" #&gt; "foo"</tt> // set the contents of all &lt;li&gt; element with username and append foo to the class
+</li>
+<li>
+<tt>"*" #&gt; &lt;span&gt;{userName}&lt;/span&gt;</tt> // set all the elements to &lt;span&gt;{userName}&lt;/span&gt;
+</li>
+
+</ul>
+<div class="Standard">
+CSS Selector Transforms extends <tt>NodeSeq =&gt; NodeSeq</tt>... they are quite literally functions and can be passes as a parameter to anything expecting <tt>NodeSeq =&gt; NodeSeq</tt> or returned as a result for any method that returns <tt>NodeSeq =&gt; NodeSeq</tt>.
+</div>
+<div class="Standard">
+Let’s look at each of the pieces to see how they work.
+</div>
+<div class="Standard">
+First, you must <tt>import net.liftweb.util._</tt> and <tt>import Helpers._</tt> These packages include the classes and the implicit conversions that make the CSS Selector Tranforms work.
+</div>
+<div class="Standard">
+The transform is defined by: String representing selector #&gt; transform value.
+</div>
+<div class="Standard">
+The selector is a String constant which implements the following subset of CSS Selectors:
+</div>
+<ul>
+<li>
+<tt>#id</tt> - selects the element with the specified id 
+</li>
+<li>
+<tt>.class</tt> - selects all elements have a class attribute where one of the space-separated values equals class 
+</li>
+<li>
+<tt>attr_name=attr_value</tt> - selects all elements where the given attribute equals the given value
+</li>
+<li>
+<tt>element_name</tt> - selects all the elements matching the name
+</li>
+<li>
+<tt>*</tt> - selects all elements
+</li>
+<li>
+<tt>@name</tt> - selects all elements with <tt>the specified name</tt>
+</li>
+<li>
+<tt>:button</tt> - selects all the elements with <tt>type="button"</tt>
+</li>
+<li>
+<tt>:checkbox</tt> - selects all the elements with <tt>type="checkbox"</tt>
+</li>
+<li>
+<tt>:file</tt> - selects all the elements with <tt>type="file"</tt>
+</li>
+<li>
+<tt>:password</tt> - selects all the elements with <tt>type="password"</tt>
+</li>
+<li>
+<tt>:radio</tt> - selects all the elements with <tt>type="radio"</tt>
+</li>
+<li>
+<tt>:reset</tt> - selects all the elements with <tt>type="reset"</tt>
+</li>
+<li>
+<tt>:submit</tt> - selects all the elements with <tt>type="submit"</tt>
+</li>
+<li>
+<tt>:text</tt> - selects all the elements with <tt>type="text"</tt>
+</li>
+
+</ul>
+<div class="Standard">
+You can put replacement rules after the selector:
+</div>
+<ul>
+<li>
+none (e.g., <tt>"#id"</tt>) replaces all matching elements with the values<br/>
+<tt>"#name" #&gt; "David" // &lt;span&gt;&lt;span id="name"/&gt;&lt;/span&gt; -&gt; &lt;span&gt;David&lt;/span&gt;</tt>
+</li>
+<li>
+* (e.g., "<tt>#id *</tt>") replaces the content children of the matching elements with the values<br/>
+<tt>"#name *" #&gt; "David" // &lt;span&gt;&lt;span id="name"/&gt;&lt;/span&gt; -&gt; &lt;span&gt;&lt;span id="name&gt;David&lt;/span&gt;&lt;/span&gt;</tt>
+</li>
+<li>
+*+ or <tt>*&lt;</tt> (e.g., "<tt>#id *</tt>+") appends the value to the the content children nodes<br/>
+<tt>"#name *+" #&gt; "David" // &lt;span&gt;&lt;span id="name"&gt;Name: &lt;/span&gt;&lt;/span&gt; -&gt; &lt;span&gt;&lt;span id="name&gt;Name: David&lt;/span&gt;&lt;/span&gt;</tt>
+</li>
+<li>
+<tt>-*</tt> or<tt> &gt;*</tt> (e.g., "<tt>#id -*</tt>") prepends the value to the the content children nodes<br/>
+<tt>"#name -*" #&gt; "David" // &lt;span&gt;&lt;span id="name"&gt; Pollak&lt;/span&gt;&lt;/span&gt; -&gt; &lt;span&gt;&lt;span id="name&gt;David Pollak&lt;/span&gt;&lt;/span&gt;</tt>
+</li>
+<li>
+<tt>[attr]</tt> (e.g., "#id <tt>[href]</tt>") replaces the matching attribute’s value with the values. <br/>
+<tt>"#link [href]" #&gt; "http://dogscape.com" <br/>
+// &lt;a href="#" id="link"&gt;Dogscape&lt;/a&gt; -&gt; &lt;a href="http://dogscape.com" id="link"&gt;Dogscape&lt;/a&gt;</tt>
+</li>
+<li>
+<tt>[attr+]</tt> (e.g., "#id <tt>[class+]</tt>") appends the value to the existing attribute.<br/>
+<tt>"span [class+]" #&gt; "error" <br/>
+// &lt;span class"foo"&gt;Dogscape&lt;/span&gt; -&gt; &lt;span class"foo error"&gt;Dogscape&lt;/span&gt;</tt>
+</li>
+<li>
+<tt>[attr!]</tt> (e.g., "#id <tt>[class!]</tt>") removes the matching value to the existing from.<br/>
+<tt>"span [class!]" #&gt; "error" <br/>
+// &lt;span class"error foo"&gt;Dogscape&lt;/span&gt; -&gt; &lt;span class"foo"&gt;Dogscape&lt;/span&gt;</tt>
+</li>
+<li>
+<tt>^^</tt> - lifts the selected element to the root of the elements that are returned making it possible to choose an element from a template
+</li>
+<li>
+<tt>^*</tt> - lifts the selected element’s children to the root of the elements that are returned making it possible to choose an element’s children from a template
+</li>
+
+</ul>
+<div class="Standard">
+The right hand side of the CSS Selector Transform can be one of the following:
+</div>
+<ul>
+<li>
+<tt>String</tt> — a <tt>String</tt> constant, for example: <br/>
+"#name *" #&gt; "David" // &lt;span id="name"/&gt; -&gt; &lt;span id="name"&gt;David&lt;/span&gt; <br/>
+"#name *" #&gt; getUserNameAsString
+</li>
+<li>
+<tt>NodeSeq</tt> - a <tt>NodeSeq</tt> constant, for example:<br/>
+"#name *" #&gt; &lt;i&gt;David&lt;/i&gt; // &lt;span id="name"/&gt; -&gt; &lt;span id="name"&gt;&lt;i&gt;David&lt;/i&gt;&lt;/span&gt;<br/>
+"#name *" #&gt; getUserNameAsHtml
+</li>
+<li>
+<tt>NodeSeq =&gt; NodeSeq</tt> — a function that transforms the node (yes, it can be a CssBindFunc):<br/>
+<tt>"#name" #&gt; ((n: NodeSeq) =&gt; n % ("class" -&gt; "dog"))</tt> // &lt;span id="name"/&gt; -&gt; &lt;span id="name" class="dog"/&gt;
+</li>
+<li>
+<tt>Bindable</tt> — something that implements the <tt>Bindable</tt> trait (e.g., <tt>MappedField</tt> and <tt>Record.Field</tt>)
+</li>
+<li>
+<tt>StringPromotable</tt> — A constant that can be promoted to a <tt>String</tt> (<tt>Int</tt>, <tt>Symbol</tt>, <tt>Long</tt> or <tt>Boolean</tt>). There is an automatic (implicit) conversion from Int, Symbol, Long or Boolean to StringPromotable.<br/>
+<tt>"#id_like_cats" #&gt; true &amp; "#number_of_cats" #&gt; 2</tt>
+</li>
+<li>
+<tt>IterableConst</tt> — A <tt>Box</tt>, <tt>Seq</tt>, or <tt>Option</tt> of <tt>NodeSeq =&gt; NodeSeq</tt>, <tt>String</tt>, <tt>NodeSeq</tt>, or <tt>Bindable</tt>. Implicit conversions automatically promote the likes of <tt>Box[String]</tt>, <tt>List[String]</tt>, <tt>List[NodeSeq]</tt>, etc. to <tt>IterableConst</tt>.<br/>
+<tt>"#id" #&gt; (Empty: Box[String]) // &lt;span&gt;&lt;span id="id"&gt;Hi&lt;/span&gt;&lt;/span&gt; -&gt; &lt;span/&gt;<br/>
+"#id" #&gt; List("a", "b", "c") // &lt;span&gt;&lt;span id="id"/&gt;&lt;/span&gt; -&gt; &lt;span&gt;abc&lt;/span&gt;<br/>
+"#id [href]" #&gt; (None: Option[String]) &lt;a id="id" href="dog"/&gt; -&gt; &lt;a id="id"/&gt;</tt>
+</li>
+
+</ul>
+<div class="Standard">
+Note that if you bind to the children of a selected element, multiple copies of the element result from bind to an <tt>IterableConst</tt> (if the element has an id attribute, the id attribute will be stripped after the first element): 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">"#line *" #&gt; List("a", "b", "c") // &lt;li id="line&gt;sample&lt;/li&gt; -&gt; 
+                              // &lt;li id="line"&gt;a&lt;/li&gt;&lt;li&gt;b&lt;/li&gt;&lt;li&gt;c&lt;/li&gt;
+​
+"#age *" #&gt; (None: Option[NodeSeq]) // &lt;span&gt;&lt;span id="age"&gt;Dunno&lt;/span&gt;&lt;/span&gt; -&gt; 
+                                    // &lt;span/&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The above use cases may seem a little strange (they are not quite orthogonal), but they address common use cases in Lift. * IterableFunc — A Box, Seq, or Option of functions that transform NodeSeq =&gt; String, NodeSeq, Seq[String], Seq[NodeSeq], Box[String], Box[NodeSeq], Option[String] or Option[NodeSeq]. The same rules for handling multiple values in IterableConst apply to IterableFunc. Implicit conversions automatically promote the functions with the appropriate signature to an IterableFunc.
+</div>
+<div class="Standard">
+You can chain CSS Selector Transforms with the <tt>&amp;</tt> method:<br/>
+<tt>"#id" #&gt; "33" &amp; "#name" #&gt; "David" &amp; "#chat_line" #&gt; List("a", "b", "c") &amp; ClearClearable</tt>
+</div>
+<div class="Standard">
+CSS Selector Transforms offer an alternative to Lift’s traditional binding (See <tt>Helpers.bind()</tt>).
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-7.9.html#Next">Previous: Section 7.9</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.11.html#prev">Next: Section 7.11</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

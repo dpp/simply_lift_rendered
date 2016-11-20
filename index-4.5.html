@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.4.html#Next">Previous: Section 4.4</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.6.html#prev">Next: Section 4.6</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.5">4.5</a> Field Errors
+</h2>
+<div class="Standard">
+In the prior examples, we displayed an error to the user. However, we didn’t tell the user what field resulted in the error. Let’s be a little more granular about error reporting.
+</div>
+<div class="Standard">
+First, let’s look at the HTML:
+</div>
+<div class="listing">
+<div class="caption">
+fielderror.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    Let's get granular about error messages
+  &lt;/div>
+  
+  &lt;div>
+    &lt;div class="lift:FieldErrorExample?form=post">
+      Name: &lt;input name="name">&lt;br>
+      Age: &lt;span class="lift:Msg?id=age&errorClass=error">error&lt;/span>
+      &lt;input name="age" id="the_age" value="0">&lt;br>
+      &lt;input type="submit" value="Submit">
+    &lt;/div>
+  &lt;/div>
+&lt;/div>
+​
+</pre>
+</div>
+<div class="Standard">
+This HTML is different. Note: <tt>Age: &lt;span class="lift:Msg?id=age&amp;errorClass=error"&gt;error&lt;/span&gt;</tt>. We mark an area in the markup to put the error message.
+</div>
+<div class="Standard">
+Let’s look at our snippet code which is very similar to <tt>Stateful.scala</tt> with a small, but important difference:
+</div>
+<div class="listing">
+<div class="caption">
+FieldErrorExample.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import common._
+import util.Helpers._
+import scala.xml.NodeSeq
+​
+/**
+ * A StatefulSnippet like Stateful.scala
+ */
+class FieldErrorExample extends StatefulSnippet {
+  private var name = ""
+  private var age = "0"
+  private val whence = S.referer openOr "/"
+​
+  def dispatch = {case _ => render}
+​
+  def render =
+    "name=name" #> SHtml.text(name, name = _) &
+    "name=age" #> SHtml.text(age, age = _) &
+    "type=submit" #> SHtml.onSubmitUnit(process)
+  
+  // like Stateful
+  private def process() =
+    asInt(age) match {
+      // notice the parameter for error corresponds to
+      // the id in the Msg span
+      case Full(a) if a < 13 => S.error("age", "Too young!")
+      case Full(a) => {
+        S.notice("Name: "+name)
+        S.notice("Age: "+a)
+        S.redirectTo(whence)
+      }
+      
+      // notice the parameter for error corresponds to
+      // the id in the Msg span
+      case _ => S.error("age", "Age doesn't parse as a number")
+    }
+}
+</pre>
+</div>
+<div class="Standard">
+The key difference is: <tt>case Full(a) if a &lt; 13 =&gt; S.error(<b>"age"</b>, "Too young!")</tt>. Note that we pass "age" to <tt>S.error</tt> and this corresponds to the <tt>id</tt> in the <tt>Msg</tt> snippet in markup. This tells Lift how to associate the error message and the markup.
+</div>
+<div class="Standard">
+But there’s a better way to do complex forms in Lift: <tt>LiftScreen</tt>.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.4.html#Next">Previous: Section 4.4</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.6.html#prev">Next: Section 4.6</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

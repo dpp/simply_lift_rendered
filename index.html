@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev"> </a></span>
+<span class="up"><a class="up" href="index.html">Up: Main page</a></span>
+<span class="next"><a class="next" name="Next" href="index-Part-I.html#prev">Next: Part I</a></span>
+</div>
+<h1 class="title">
+Simply Lift
+</h1>
+<h2 class="author">
+David Pollak
+</h2>
+<h2 class="Date">
+September 8, 2011
+</h2>
+<div class="Standard">
+Copyright © 2010-2011 by David Pollak<br/>
+This document is licensed Creative Commons Attribution, Non Commercial, No Derivatives: <a class="FlexURL" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">http://creativecommons.org/licenses/by-nc-nd/3.0/</a> 
+</div>
+<div class="fulltoc">
+<div class="tocheader">
+Table of Contents
+</div>
+<div class="toc">
+<a class="Link" href="index-Part-I.html#toc-Part-I">Part I: The Lift Web Framework</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-Chapter-1.html#toc-Chapter-1">Chapter 1: Introduction</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-2.html#toc-Chapter-2">Chapter 2: The ubiquitous Chat app</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-2.1.html#toc-Section-2.1">Section 2.1: The View</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.2.html#toc-Section-2.2">Section 2.2: The Chat Comet component</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.3.html#toc-Section-2.3">Section 2.3: The <tt>ChatServer</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.4.html#toc-Section-2.4">Section 2.4: User Input</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.5.html#toc-Section-2.5">Section 2.5: Chat In</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.6.html#toc-Section-2.6">Section 2.6: Running it</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-2.7.html#toc-Section-2.7">Section 2.7: What you don’t see</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-3.html#toc-Chapter-3">Chapter 3: Snippets and SiteMap</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Section-3.1">Section 3.1: Starting at the beginning: <tt>Boot.scala</tt></a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.1">Subsection 3.1.1: <tt>LiftRules</tt> rules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.2">Subsection 3.1.2: Properties and Run modes</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.3">Subsection 3.1.3: By convention</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.4">Subsection 3.1.4: Misc Rules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.1.html#toc-Subsection-3.1.5">Subsection 3.1.5: Html5</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Section-3.2">Section 3.2: <tt>SiteMap</tt></a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.1">Subsection 3.2.1: Defining the <tt>SiteMap</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.2">Subsection 3.2.2: Simplest <tt>SiteMap</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.3">Subsection 3.2.3: <tt>Menu</tt> and <tt>Loc[_]</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.4">Subsection 3.2.4: Access Control</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.5">Subsection 3.2.5: <tt>Hidden</tt> and <tt>Group</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.6">Subsection 3.2.6: Submenus</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.7">Subsection 3.2.7: Parameters</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.8">Subsection 3.2.8: Wildcards</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.2.html#toc-Subsection-3.2.9">Subsection 3.2.9: Summary</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Section-3.3">Section 3.3: View First</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.1">Subsection 3.3.1: Page source</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.2">Subsection 3.3.2: Dynamic content</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.3">Subsection 3.3.3: Surround and page chrome</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.4">Subsection 3.3.4: Embed</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.3.html#toc-Subsection-3.3.5">Subsection 3.3.5: Results</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Section-3.4">Section 3.4: Snippets and Dynamic content</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.1">Subsection 3.4.1: Snippets in markup</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.2">Subsection 3.4.2: Snippet resolution</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.3">Subsection 3.4.3: Dynamic Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.4">Subsection 3.4.4: Embedded Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.5">Subsection 3.4.5: Param Example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.6">Subsection 3.4.6: Recursive</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.4.html#toc-Subsection-3.4.7">Subsection 3.4.7: Summary</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-3.5.html#toc-Section-3.5">Section 3.5: Wrap up</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-4.html#toc-Chapter-4">Chapter 4: Forms</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-4.1.html#toc-Section-4.1">Section 4.1: Old Fashioned Dumb Forms</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.2.html#toc-Section-4.2">Section 4.2: OnSubmit</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.3.html#toc-Section-4.3">Section 4.3: Stateful Snippets</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.4.html#toc-Section-4.4">Section 4.4: <tt>RequestVar</tt>s</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.5.html#toc-Section-4.5">Section 4.5: Field Errors</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.6.html#toc-Section-4.6">Section 4.6: <tt>LiftScreen</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.7.html#toc-Section-4.7">Section 4.7: <tt>Wizard</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.8.html#toc-Section-4.8">Section 4.8: Ajax</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.9.html#toc-Section-4.9">Section 4.9: But sometimes Old Fashioned is good</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-4.10.html#toc-Section-4.10">Section 4.10: Conclusion</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-5.html#toc-Chapter-5">Chapter 5: HTTP and REST</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-5.1.html#toc-Section-5.1">Section 5.1: Introduction</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-5.2.html#toc-Section-5.2">Section 5.2: REST the hard way</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-5.3.html#toc-Section-5.3">Section 5.3: Making it easier with <tt>RestHelper</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-5.4.html#toc-Section-5.4">Section 5.4: A complete REST example</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-5.5.html#toc-Section-5.5">Section 5.5: Wrap Up</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-6.html#toc-Chapter-6">Chapter 6: Wiring</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-6.1.html#toc-Section-6.1">Section 6.1: Cells</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-6.2.html#toc-Section-6.2">Section 6.2: Hooking it up to the UI</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-6.3.html#toc-Section-6.3">Section 6.3: Shared Shopping</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-6.4.html#toc-Section-6.4">Section 6.4: Wrap up</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-7.html#toc-Chapter-7">Chapter 7: Core Concepts</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Section-7.1">Section 7.1: Snippets</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.1">Subsection 7.1.1: Snippet <tt>NodeSeq =&gt; NodeSeq</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.2">Subsection 7.1.2: Snippet instances</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.3">Subsection 7.1.3: Multiple methods on a snippet class</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.4">Subsection 7.1.4: Inter-snippet communication</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.5">Subsection 7.1.5: Recursive Snippets</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.1.html#toc-Subsection-7.1.6">Subsection 7.1.6: Snippet parameters</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.2.html#toc-Section-7.2">Section 7.2: Box/Option</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.3.html#toc-Section-7.3">Section 7.3: S/SHtml</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.4.html#toc-Section-7.4">Section 7.4: Boot</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.5.html#toc-Section-7.5">Section 7.5: SiteMap</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.6.html#toc-Section-7.6">Section 7.6: GUIDs</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-7.6.html#toc-Subsection-7.6.1">Subsection 7.6.1: How GUIDs are generated</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.6.html#toc-Subsection-7.6.2">Subsection 7.6.2: Where they are used </a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.7.html#toc-Section-7.7">Section 7.7: LiftRules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.8.html#toc-Section-7.8">Section 7.8: SessionVars and RequestVars</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.9.html#toc-Section-7.9">Section 7.9: Helpers</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.10.html#toc-Section-7.10">Section 7.10: CSS Selector Transforms</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.11.html#toc-Section-7.11">Section 7.11: Client-side behavior invoking server-side functions</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.12.html#toc-Section-7.12">Section 7.12: Ajax</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.13.html#toc-Section-7.13">Section 7.13: Comet</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.14.html#toc-Section-7.14">Section 7.14: LiftActor</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.15.html#toc-Section-7.15">Section 7.15: Pattern Matching</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.16.html#toc-Section-7.16">Section 7.16: Type safety</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.17.html#toc-Section-7.17">Section 7.17: Page rewriting</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-7.18.html#toc-Section-7.18">Section 7.18: Security</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-8.html#toc-Chapter-8">Chapter 8: Common Patterns</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-8.1.html#toc-Section-8.1">Section 8.1: Localization</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-8.1.html#toc-Subsection-8.1.1">Subsection 8.1.1: Localizing Templates</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.1.html#toc-Subsection-8.1.2">Subsection 8.1.2: Resource Lookup</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.1.html#toc-Subsection-8.1.3">Subsection 8.1.3: Accessing Resources</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.1.html#toc-Subsection-8.1.4">Subsection 8.1.4: Conclusion</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.2.html#toc-Section-8.2">Section 8.2: Dependency Injection</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-8.2.html#toc-Subsection-8.2.1">Subsection 8.2.1: Lift Libraries and Injector</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.2.html#toc-Subsection-8.2.2">Subsection 8.2.2: Lift WebKit and enhanced injection scoping </a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.2.html#toc-Subsection-8.2.3">Subsection 8.2.3: Conclusion </a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.3.html#toc-Section-8.3">Section 8.3: Modules</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.4.html#toc-Section-8.4">Section 8.4: HtmlProperties, XHTML and HTML5</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-8.4.html#toc-Subsection-8.4.1">Subsection 8.4.1: XHTML via <tt>OldHtmlProperties</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.4.html#toc-Subsection-8.4.2">Subsection 8.4.2: HTML5 via <tt>Html5Properties</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-8.4.html#toc-Subsection-8.4.3">Subsection 8.4.3: Changing behavior mid-session or mid-request</a>
+</div>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-9.html#toc-Chapter-9">Chapter 9: Built-in Snippets</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-9.1.html#toc-Section-9.1">Section 9.1: CSS</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.2.html#toc-Section-9.2">Section 9.2: Msgs</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.3.html#toc-Section-9.3">Section 9.3: Msg</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.4.html#toc-Section-9.4">Section 9.4: Menu</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.5.html#toc-Section-9.5">Section 9.5: A</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.6.html#toc-Section-9.6">Section 9.6: Children</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.7.html#toc-Section-9.7">Section 9.7: Comet</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.8.html#toc-Section-9.8">Section 9.8: Form</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.9.html#toc-Section-9.9">Section 9.9: Ignore</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.10.html#toc-Section-9.10">Section 9.10: Loc</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.11.html#toc-Section-9.11">Section 9.11: Surround</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.12.html#toc-Section-9.12">Section 9.12: TestCond</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.13.html#toc-Section-9.13">Section 9.13: Embed</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.14.html#toc-Section-9.14">Section 9.14: Tail</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.15.html#toc-Section-9.15">Section 9.15: WithParam</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.16.html#toc-Section-9.16">Section 9.16: VersionInfo</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.17.html#toc-Section-9.17">Section 9.17: SkipDocType</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.18.html#toc-Section-9.18">Section 9.18: XmlGroup</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.19.html#toc-Section-9.19">Section 9.19: LazyLoad</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-9.20.html#toc-Section-9.20">Section 9.20: WithResourceId</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-10.html#toc-Chapter-10">Chapter 10: SiteMap</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-11.html#toc-Chapter-11">Chapter 11: REST</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-12.html#toc-Chapter-12">Chapter 12: MVC (If you really want it)</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-13.html#toc-Chapter-13">Chapter 13: From MVC</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-13.1.html#toc-Section-13.1">Section 13.1: First things first</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.2.html#toc-Section-13.2">Section 13.2: Making a <tt>SiteMap</tt> entry</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.3.html#toc-Section-13.3">Section 13.3: Creating the view</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.4.html#toc-Section-13.4">Section 13.4: Creating the Snippet</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.5.html#toc-Section-13.5">Section 13.5: Getting Ajaxy</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.6.html#toc-Section-13.6">Section 13.6: Next Steps</a>
+</div>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Part-II.html#toc-Part-II">Part II: Recipes</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-Chapter-14.html#toc-Chapter-14">Chapter 14: Dynamic html tables created from <tt>DB.runQuery()</tt></a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-14.1.html#toc-Section-14.1">Section 14.1: Problem</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-14.2.html#toc-Section-14.2">Section 14.2: Solution</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-15.html#toc-Chapter-15">Chapter 15: Dynamically choosing content</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-15.1.html#toc-Section-15.1">Section 15.1: Problem</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-15.2.html#toc-Section-15.2">Section 15.2: Solution</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-16.html#toc-Chapter-16">Chapter 16: Ajax Forms</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-17.html#toc-Chapter-17">Chapter 17: Protecting REST APIs</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-17.1.html#toc-Section-17.1">Section 17.1: Problem</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-17.2.html#toc-Section-17.2">Section 17.2: Solution</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-18.html#toc-Chapter-18">Chapter 18: URI-based locale selection</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-18.1.html#toc-Section-18.1">Section 18.1: Problem</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-18.2.html#toc-Section-18.2">Section 18.2: Solution</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-19.html#toc-Chapter-19">Chapter 19: Embedding JavaScript in an HTML page</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-19.1.html#toc-Section-19.1">Section 19.1: Problem</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-19.2.html#toc-Section-19.2">Section 19.2: Solution</a>
+</div>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Part-III.html#toc-Part-III">Part III: Questions and Answers</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-Chapter-20.html#toc-Chapter-20">Chapter 20: Scaling</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-21.html#toc-Chapter-21">Chapter 21: How Lift does function/GUID mapping</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-22.html#toc-Chapter-22">Chapter 22: How Lift does Comet</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-Chapter-23.html#toc-Chapter-23">Chapter 23: Advanced Concepts</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-23.1.html#toc-Section-23.1">Section 23.1: Snippet Resolution</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-23.1.html#toc-Subsection-23.1.1">Subsection 23.1.1: <tt>LiftSession.liftTagProcessing</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-23.1.html#toc-Subsection-23.1.2">Subsection 23.1.2: <tt>LiftRules.liftTagProcessing</tt></a>
+</div>
+<div class="toc">
+<a class="Link" href="index-23.1.html#toc-Subsection-23.1.3">Subsection 23.1.3: Snippet name resolution</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-23.1.html#toc-Subsection-23.1.4">Subsection 23.1.4: Post-processing of results</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-23.2.html#toc-Section-23.2">Section 23.2: The Merging Phase</a>
+</div>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Part-IV.html#toc-Part-IV">Part IV: Misc</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-Chapter-24.html#toc-Chapter-24">Chapter 24: Releases</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-24.1.html#toc-Section-24.1">Section 24.1: Lift 2.2-RC1</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-24.1.html#toc-Subsection--1">Subsection: Lift features include:</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-24.1.html#toc-Subsection--2">Subsection: Lift 2.2-RC1 improvements include:</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-24.1.html#toc-Subsection--3">Subsection: Lift-powered sites include:</a>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-24.2.html#toc-Section-24.2">Section 24.2: Lift 2.2</a>
+</div>
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-24.2.html#toc-Subsection--4">Subsection: Lift features include:</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-24.2.html#toc-Subsection--5">Subsection: Lift 2.2 improvements include:</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-24.2.html#toc-Subsection--6">Subsection: Lift-powered sites include:</a>
+</div>
+</div>
+</div>
+</div>
+<div class="toc">
+<a class="Link" href="index-Index.html#Index">Index</a>
+</div>
+
+</div>
+<div class="fulltoc">
+<div class="tocheader">
+List of Figures
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev"> </a></span>
+<span class="up"><a class="up" href="index.html">Up: Main page</a></span>
+<span class="next"><a class="next" name="Next" href="index-Part-I.html#prev">Next: Part I</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

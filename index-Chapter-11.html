@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-10.html#Next">Previous: Chapter 10</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-12.html#prev">Next: Chapter 12</a></span>
+</div>
+<h1 class="Chapter">
+<a class="toc" name="toc-Chapter-11">11</a> <a class="Label" name="cha:REST"> </a>REST
+</h1>
+<div class="Standard">
+Lift makes providing REST-style web services very simple.
+</div>
+<div class="Standard">
+First, create an object that extends <tt>RestHelper</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">import net.liftweb.http._
+import net.liftweb.http.rest._
+​
+object MyRest extends RestHelper {
+  
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And hook your changes up to Lift in <tt>Boot.scala</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">LiftRules.dispatch.append(MyRest) // stateful — associated with a servlet container session
+LiftRules.statelessDispatchTable.append(MyRest) // stateless — no session created
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Within your MyRest object, you can define which URLs to serve:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case Req("api" :: "static" :: _, "xml", GetRequest) =&gt; &lt;b&gt;Static&lt;/b&gt; 
+  case Req("api" :: "static" :: _, "json", GetRequest) =&gt; JString("Static") 
+}
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+The above code uses the suffix of the request to determine the response type. Lift supports testing the <tt>Accept</tt> header for a response type:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case XmlGet("api" :: "static" :: _, _) =&gt; &lt;b&gt;Static&lt;/b&gt; 
+  case JsonGet("api" :: "static" :: _, _) =&gt; JString("Static") 
+}
+</pre>
+</div>
+ 
+</div>
+<div class="Standard">
+The above can also be written:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case "api" :: "static" :: _ XmlGet _=&gt; &lt;b&gt;Static&lt;/b&gt; 
+  case "api" :: "static" :: _ JsonGet _ =&gt; JString("Static") 
+} 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Note: If you want to navigate your Web Service, you must remember to add a <tt>*.xml</tt> or <tt>*.json</tt> (depending in what you have implemented) at the end of the URL: <tt>http://localhost:8080/XXX/api/static/call.json</tt> <tt>http://localhost:8080/XXX/api/static/call.xml</tt> 
+</div>
+<div class="Standard">
+Because the REST dispatch code is based on Scala’s pattern matching, we can extract elements from the request (in this case the third element will be extracted into the id variable which is a String:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case "api" :: "user" :: id :: _ XmlGet _ =&gt; &lt;b&gt;ID: {id}&lt;/b&gt;
+  case "api" :: "user" :: id :: _ JsonGet _ =&gt; JString(id) 
+} 
+</pre>
+</div>
+And with extractors, we convert an element to a particular type and only succeed with the pattern match (and the dispatch) if the parameter can be converted. For example:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case "api" :: "user" :: AsLong(id) :: _ XmlGet _ =&gt; &lt;b&gt;ID: {id}&lt;/b&gt;
+  case "api" :: "user" :: AsLong(id) :: _ JsonGet _ =&gt; JInt(id) 
+} 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In the above example, id is extracted if it can be converted to a Long.
+</div>
+<div class="Standard">
+Lift’s REST helper can also extract <tt>XML</tt> or <tt>JSON</tt> from a <tt>POST</tt> or <tt>PUT</tt> request and only dispatch the request if the XML or JSON is valid:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serve { 
+  case "api" :: "user" :: _ XmlPut xml -&gt; _ =&gt; // xml is a scala.xml.Node 
+    User.createFromXml(xml).map { u =&gt; u.save; u.toXml}
+​
+  case "api" :: "user" :: _ JsonPut json -&gt; _ =&gt; // json is a net.liftweb.json.JsonAST.JValue
+    User.createFromJson(json).map { u =&gt; u.save; u.toJson} 
+} 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+There may be cases when you want to have a single piece of business logic to calculate a value, but then convert the value to a result based on the request type. That’s where <tt>serveJx</tt> comes in … it’ll serve a response for <tt>JSON</tt> and <tt>XML</tt> requests. If you define a trait called <tt>Convertable</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">trait Convertable {
+  def toXml: Elem 
+  def toJson: JValue 
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Then define a pattern that will convert from a <tt>Convertable</tt> to a <tt>JSON</tt> or <tt>XML</tt>:
+</div>
+<div class="Standard">
+implicit def cvt: JxCvtPF[Convertable] = { case (JsonSelect, c, _) =&gt; c.toJson case (XmlSelect, c, _) =&gt; c.toXml } 
+</div>
+<div class="Standard">
+And anywhere you use <tt>serveJx</tt> and your pattern results in a <tt>Box[Convertable]</tt>, the <tt>cvt</tt> pattern is used to generate the appropriate response:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">serveJx { 
+  case Get("api" :: "info" :: Info(info) :: _, _) =&gt; Full(info) 
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Or:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">// extract the parameters, create a user 
+// return the appropriate response 
+​
+def addUser(): Box[UserInfo] = 
+  for { 
+    firstname &lt;- S.param("firstname") ?~ "firstname parameter missing" ~&gt; 400 
+    lastname &lt;- S.param("lastname") ?~ "lastname parameter missing" 
+    email &lt;- S.param("email") ?~ "email parameter missing" 
+  } yield { 
+    val u = User.create.firstName(firstname). 
+      lastName(lastname).email(email)
+​
+    S.param("password") foreach u.password.set
+    u.saveMe 
+  }
+​
+serveJx {
+  case Post("api" :: "add_user" :: _, _) =&gt; addUser() 
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In the above example, if the <tt>firstname</tt> parameter is missing, the response will be a 400 with the response body “firstname parameter missing”. If the <tt>lastname</tt> parameter is missing, the response will be a 404 with the response body “lastname parameter missing”.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-10.html#Next">Previous: Chapter 10</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-Chapter-12.html#prev">Next: Chapter 12</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

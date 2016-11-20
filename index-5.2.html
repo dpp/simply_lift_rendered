@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.1.html#Next">Previous: Section 5.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.3.html#prev">Next: Section 5.3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-5.2">5.2</a> REST the hard way
+</h2>
+<div class="Standard">
+Let’s take a look at the raw level of doing REST with Lift: taking an incoming HTTP request and transforming it into a function that returns a <tt>Box[LiftResponse]</tt> (and don’t worry, it gets easier, but we’re starting with the ugly verbose stuff so you get an idea of what’s happening under the covers):
+</div>
+<div class="listing">
+<div class="caption">
+BasicExample.scala
+</div>
+<pre class="listing brush: scala">package code
+package lib
+​
+import model._
+​
+import net.liftweb._
+import common._
+import http._
+​
+/**
+ * A simple example of a REST style interface
+ * using the basic Lift tools
+ */
+object BasicExample {
+  /*
+   * Given a suffix and an item, make a LiftResponse
+   */
+  private def toResponse(suffix: String, item: Item) =
+    suffix match {
+      case "xml" => XmlResponse(item)
+      case _ => JsonResponse(item)
+    }
+​
+  /**
+   * Find /simple/item/1234.json
+   * Find /simple/item/1234.xml
+   */
+  lazy val findItem: LiftRules.DispatchPF = {
+    case Req("simple" :: "item" :: itemId :: Nil, //  path
+             suffix, // suffix
+             GetRequest) => 
+               () => Item.find(itemId).map(toResponse(suffix, _))
+  }
+​
+  /**
+   * Find /simple2/item/1234.json
+   */
+  lazy val extractFindItem: LiftRules.DispatchPF = {
+    // path with extractor
+    case Req("simple2" :: "item" :: Item(item) :: Nil, 
+             suffix, GetRequest) =>
+               // a function that returns the response
+               () => Full(toResponse(suffix, item))
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+One additional piece of the puzzle is hooking up the handlers to Lift. This is done in <tt>Boot.scala</tt> with the following lines:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // the stateless REST handlers
+    LiftRules.statelessDispatchTable.append(BasicExample.findItem)
+    LiftRules.statelessDispatchTable.append(BasicExample.extractFindItem)
+​
+    // stateful versions of the same
+    // LiftRules.dispatch.append(BasicExample.findItem)
+    // LiftRules.dispatch.append(BasicExample.extractFindItem)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Let’s break down the code. First, each handler is a <tt>PartialFunction[Req, () =&gt; Box[LiftResponse]]</tt>, but we can use a shorthand of <tt>LiftRules.dispatchPF</tt> which is a Scala type that aliases the partial function.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">lazy val findItem: LiftRules.DispatchPF =
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+defines <tt>findItem</tt> which has the type signature of a request dispatch handler.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    case Req("simple" :: "item" :: itemId :: Nil, //  path
+             suffix, // suffix
+             GetRequest) =&gt; 
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Defines a pattern to match. In this case, any 3 part path that has the first two parts <tt>/simple/item</tt> will be matched. The third part of the path will be extracted to the variable <tt>itemId</tt>. The suffix of the last path item will be extracted to the variable <tt>suffix</tt> and the request must be a GET.
+</div>
+<div class="Standard">
+If the above criteria is met, then the partial function is defined and Lift will apply the partial function to get the resulting <tt>() =&gt; Box[LiftResponse]</tt>.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">               () =&gt; Item.find(itemId).map(toResponse(suffix, _))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This is a function that finds the <tt>itemId</tt> and converts the resulting <tt>Item</tt> to a response based on the request suffix. The <tt>toResponse</tt> method looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  /*
+   * Given a suffix and an item, make a LiftResponse
+   */
+  private def toResponse(suffix: String, item: Item) =
+    suffix match {
+      case "xml" =&gt; XmlResponse(item)
+      case _ =&gt; JsonResponse(item)
+    }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+That’s all pretty straight forward, if a little verbose. Let’s look at the other example in this file. It uses an extractor to convert the <tt>String</tt> of the third element of the request path to an <tt>Item</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // path with extractor
+    case Req("simple2" :: "item" :: Item(item) :: Nil, 
+             suffix, GetRequest) =&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In this case, the pattern will not be matched unless that third element of the path is a valid <tt>Item</tt>. If it is, the variable <tt>item</tt> will contain the <tt>Item</tt> for processing. Converting this to a valid response looks like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">               // a function that returns the response
+               () =&gt; Full(toResponse(suffix, item))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Let’s look at the <tt>object Item</tt>’s unapply method to see how the extraction works:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  /**
+   * Extract a String (id) to an Item
+   */
+  def unapply(id: String): Option[Item] = Item.find(id)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In fact, let’s look at the entire <tt>Item</tt> code listing. As promised, <i>Simply Lift</i>, does not explicitly cover persistence. This class is an in-memory mock persistence class, but it behaves like any other persistence mechanism in Lift.
+</div>
+<div class="listing">
+<div class="caption">
+Item.scala
+</div>
+<pre class="listing brush: scala">package code
+package model
+​
+import net.liftweb._
+import util._
+import Helpers._
+import common._
+import json._
+​
+import scala.xml.Node
+​
+/**
+ * An item in inventory
+ */
+case class Item(id: String, name: String, 
+                description: String,
+                price: BigDecimal, taxable: Boolean,
+                weightInGrams: Int, qnty: Int)
+​
+/**
+ * The Item companion object
+ */
+object Item {
+  private implicit val formats =
+    net.liftweb.json.DefaultFormats + BigDecimalSerializer
+​
+  private var items: List[Item] = parse(data).extract[List[Item]]
+​
+  private var listeners: List[Item => Unit] = Nil
+​
+  /**
+   * Convert a JValue to an Item if possible
+   */
+  def apply(in: JValue): Box[Item] = Helpers.tryo{in.extract[Item]}
+​
+  /**
+   * Extract a String (id) to an Item
+   */
+  def unapply(id: String): Option[Item] = Item.find(id)
+​
+  /**
+   * Extract a JValue to an Item
+   */
+  def unapply(in: JValue): Option[Item] = apply(in)
+​
+  /**
+   * The default unapply method for the case class.
+   * We needed to replicate it here because we
+   * have overloaded unapply methods
+   */
+  def unapply(in: Any): Option[(String, String, 
+                                String,
+                                BigDecimal, Boolean,
+                                Int, Int)] = {
+    in match {
+      case i: Item => Some((i.id, i.name, i.description,
+                            i.price, i.taxable,
+                            i.weightInGrams, i.qnty))
+      case _ => None
+    }
+  }
+​
+  /**
+   * Convert an item to XML
+   */
+  implicit def toXml(item: Item): Node = 
+    <item>{Xml.toXml(item)}</item>
+​
+​
+  /**
+   * Convert the item to JSON format.  This is
+   * implicit and in the companion object, so
+   * an Item can be returned easily from a JSON call
+   */
+  implicit def toJson(item: Item): JValue = 
+    Extraction.decompose(item)
+​
+  /**
+   * Convert a Seq[Item] to JSON format.  This is
+   * implicit and in the companion object, so
+   * an Item can be returned easily from a JSON call
+   */
+  implicit def toJson(items: Seq[Item]): JValue = 
+    Extraction.decompose(items)
+​
+  /**
+   * Convert a Seq[Item] to XML format.  This is
+   * implicit and in the companion object, so
+   * an Item can be returned easily from an XML REST call
+   */
+  implicit def toXml(items: Seq[Item]): Node = 
+    <items>{
+      items.map(toXml)
+    }</items>
+​
+  /**
+   * Get all the items in inventory
+   */
+  def inventoryItems: Seq[Item] = items
+​
+  // The raw data
+  private def data = 
+"""[
+  {"id": "1234", "name": "Cat Food",
+  "description": "Yummy, tasty cat food",
+  "price": 4.25,
+  "taxable": true,
+  "weightInGrams": 1000,
+  "qnty": 4
+  },
+  {"id": "1235", "name": "Dog Food",
+  "description": "Yummy, tasty dog food",
+  "price": 7.25,
+  "taxable": true,
+  "weightInGrams": 5000,
+  "qnty": 72
+  },
+  {"id": "1236", "name": "Fish Food",
+  "description": "Yummy, tasty fish food",
+  "price": 2,
+  "taxable": false,
+  "weightInGrams": 200,
+  "qnty": 45
+  },
+  {"id": "1237", "name": "Sloth Food",
+  "description": "Slow, slow sloth food",
+  "price": 18.33,
+  "taxable": true,
+  "weightInGrams": 750,
+  "qnty": 62
+  },
+]
+"""
+​
+  /**
+   * Select a random Item
+   */
+  def randomItem: Item = synchronized {
+    items(Helpers.randomInt(items.length))
+  }
+​
+  /**
+   * Find an item by id
+   */
+  def find(id: String): Box[Item] = synchronized {
+    items.find(_.id == id)
+  }
+​
+  /**
+   * Add an item to inventory
+   */
+  def add(item: Item): Item = {
+    synchronized {
+      items = item :: items.filterNot(_.id == item.id)
+      updateListeners(item)
+    }
+  }
+​
+  /**
+   * Find all the items with the string in their name or
+   * description
+   */
+  def search(str: String): List[Item] = {
+    val strLC = str.toLowerCase()
+​
+    items.filter(i =>
+      i.name.toLowerCase.indexOf(strLC) >= 0 ||
+                 i.description.toLowerCase.indexOf(strLC) >= 0)
+  }
+​
+  /**
+   * Deletes the item with id and returns the
+   * deleted item or Empty if there's no match
+   */
+  def delete(id: String): Box[Item] = synchronized {
+    var ret: Box[Item] = Empty
+​
+    val Id = id // an upper case stable ID for pattern matching
+​
+    items = items.filter {
+      case i@Item(Id, _, _, _, _, _, _) => 
+        ret = Full(i) // side effect
+        false
+      case _ => true
+    }
+​
+    ret.map(updateListeners)
+  }
+​
+  /**
+   * Update listeners when the data changes
+   */
+  private def updateListeners(item: Item): Item = {
+    synchronized {
+      listeners.foreach(f => 
+        Schedule.schedule(() => f(item), 0 seconds))
+​
+      listeners = Nil
+    }
+    item
+  }
+​
+  /**
+   * Add an onChange listener
+   */
+  def onChange(f: Item => Unit) {
+    synchronized {
+      // prepend the function to the list of listeners
+      listeners ::= f
+    }
+  }
+    
+}
+​
+/**
+ * A helper that will JSON serialize BigDecimal
+ */
+object BigDecimalSerializer extends Serializer[BigDecimal] {
+  private val Class = classOf[BigDecimal]
+​
+  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), BigDecimal] = {
+    case (TypeInfo(Class, _), json) => json match {
+      case JInt(iv) => BigDecimal(iv)
+      case JDouble(dv) => BigDecimal(dv)
+      case value => throw new MappingException("Can't convert " + value + " to " + Class)
+    }
+  }
+​
+  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+    case d: BigDecimal => JDouble(d.doubleValue)
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+Let’s take a look at what the resulting output is:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple/item/1234
+{
+  "id":"1234",
+  "name":"Cat Food",
+  "description":"Yummy, tasty cat food",
+  "price":4.25,
+  "taxable":true,
+  "weightInGrams":1000,
+  "qnty":4
+}
+​
+dpp@raptor:~/proj/simply_lift/samples/http_rest$ curl http://localhost:8080/simple/item/1234.xml
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;item&gt;
+  &lt;id&gt;1234&lt;/id&gt;
+  &lt;name&gt;Cat Food&lt;/name&gt;
+  &lt;description&gt;Yummy, tasty cat food&lt;/description&gt;
+  &lt;price&gt;4.25&lt;/price&gt;
+  &lt;taxable&gt;true&lt;/taxable&gt;
+  &lt;weightInGrams&gt;1000&lt;/weightInGrams&gt;
+  &lt;qnty&gt;4&lt;/qnty&gt;
+&lt;/item&gt;  
+dpp@raptor:~/proj/simply_lift/samples/http_rest$ 
+​
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.1.html#Next">Previous: Section 5.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.3.html#prev">Next: Section 5.3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-3.2.html#Next">Previous: Section 3.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.4.html#prev">Next: Section 3.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-3.3">3.3</a> View First
+</h2>
+<div class="Standard">
+Once the access control is granted by SiteMap, Lift loads the view related to the URL. There are many mechanisms that Lift uses to resolve a path to a view, but the simplest is a one to one mapping between the URL path and the files in <tt>/src/main/webapp</tt>. If the URL is <tt>/index</tt>, then Lift will look for the localized (see <a class="Reference" href="index-8.1.html#sec:Localization">8.1 on page 1↓</a>) version of <tt>/src/main/webapp/index.html</tt>. Once Lift loads the template, Lift processes it to transform it into the dynamic content you want to return in response to the URL input.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.3.1">3.3.1</a> Page source
+</h3>
+<div class="Standard">
+Let’s look at the page source:
+</div>
+<div class="listing">
+<div class="caption">
+index.html
+</div>
+<pre class="listing brush: xml">&lt;!DOCTYPE html>
+&lt;html>
+  &lt;head>
+    &lt;meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    &lt;title>Home&lt;/title>
+  &lt;/head>
+  &lt;body class="lift:content_id=main">
+    &lt;div id="main" class="lift:surround?with=default&at=content">
+      &lt;div>Hello World.  Welcome to your Lift application.&lt;/div>
+      &lt;div>Check out a page with &lt;a href="/param/foo">query parameters&lt;/a>.&lt;/div>
+​
+      &lt;span class="lift:embed?what=_embedme">
+        replaced with embedded content
+      &lt;/span>
+​
+      &lt;div>
+	&lt;ul>
+	  &lt;li>Recursive: &lt;a href="/recurse/one">First snippet&lt;/a>&lt;/li>
+	  &lt;li>Recursive: &lt;a href="/recurse/two">Second snippet&lt;/a>&lt;/li>
+	  &lt;li>Recursive: &lt;a href="/recurse/both">Both snippets&lt;/a>&lt;/li>
+	&lt;/ul>
+      &lt;/div>
+    &lt;/div>
+  &lt;/body>
+&lt;/html>
+​
+</pre>
+</div>
+<div class="Standard">
+We can open the page in our browser:
+</div>
+<div class="Standard">
+<img class="embedded" src="raw.png" alt="figure raw.png" style="max-width: 411px; max-height: 75px;"/>
+
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.3.2">3.3.2</a> Dynamic content
+</h3>
+<div class="Standard">
+The template is a legal HTML page. But there are marker in the page to tell Lift how to interpret the HTML.
+</div>
+<div class="Standard">
+If the <tt>&lt;body&gt;</tt> tag contains a <tt>class</tt> attribute <tt>lift:content_id=xxxx</tt>, then Lift will find the element with the matching <tt>id</tt> and use that as the starting point for rendering the page. This allows your designers to edit and maintain the pages in the same hierarchy that you use for your application.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.3.3">3.3.3</a> Surround and page chrome
+</h3>
+<div class="Standard">
+The template processing starts with:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml"> &lt;div id="main" class="lift:surround?with=default&amp;at=content"&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The <tt>class</tt> attribute <tt>lift:surround?with=default;at=content</tt> instructs Lift to surround the current Element with the template named default.html (typically located in the <tt>/templates-hidden/</tt> directory), and place the current page’s content at the element with the “content” <tt>id</tt>.
+</div>
+<div class="Standard">
+This pattern allows us to wrap a common chrome around every page on our site. You can also specify different template to use for surrounding. Further, the template itself can choose different templates to use for surrounding.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.3.4">3.3.4</a> Embed
+</h3>
+<div class="Standard">
+In addition to surrounding the page with chrome, you can also embed another file. For example, you could have a shopping cart component that is embedded in certain pages. We embed with:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;span class="lift:embed?what=_embedme"&gt;
+  replaced with embedded content
+&lt;/span&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Once again, the command is signalled with a <tt>class</tt> attribute that starts with <tt>lift:</tt>. In this case, we embed a template from the file <tt>_embedme.html</tt>.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.3.5">3.3.5</a> Results
+</h3>
+<div class="Standard">
+The resulting dynamically generated page looks like:
+</div>
+<div class="Standard">
+<img class="embedded" src="browser.png" alt="figure browser.png" style="width: 100%; max-width: 1028px; height: auto; max-height: 368px;"/>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-3.2.html#Next">Previous: Section 3.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.4.html#prev">Next: Section 3.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

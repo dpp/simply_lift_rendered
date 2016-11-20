@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-6.html#Next">Previous: Chapter 6</a></span>
+<span class="up"><a class="up" href="index-Chapter-6.html">Up: Chapter 6</a></span>
+<span class="next"><a class="next" name="Next" href="index-6.2.html#prev">Next: Section 6.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-6.1">6.1</a> Cells
+</h2>
+<div class="Standard">
+Like a spreadsheet, Lift’s Wiring is based on Cells. Cells come in three types: <tt>ValueCell</tt>, <tt>DynamicCell</tt>, and <tt>FuncCell</tt>.
+</div>
+<div class="Standard">
+A <tt>ValueCell</tt> contains a value that is entered by a user or depends on some user action. A <tt>ValueCell</tt> may represent the items in our shopping cart or the tax rate.
+</div>
+<div class="Standard">
+A <tt>DynamicCell</tt> contains a value that changes every time the cell is accessed. For example, a random number or the current time.
+</div>
+<div class="Standard">
+A <tt>FuncCell</tt> has a value based on a formula applied to the value or other cells.
+</div>
+<div class="Standard">
+Let’s see some code that demonstrates this:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">val quantity = ValueCell(0)
+val price = ValueCell(1d)
+val total = price.lift(_ * quantity)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+We define two <tt>ValueCell</tt>s, one for <tt>quantity</tt> and the other for <tt>price</tt>. Next, define the <tt>total</tt> by “lifting” the <tt>price</tt> in a formula that multiplies it by <tt>quantity</tt>. Let’s see how it works in the console:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">scala&gt; import net.liftweb._
+import net.liftweb._
+​
+scala&gt; import util._
+import util._
+​
+scala&gt; val quantity = ValueCell(0)
+quantity: net.liftweb.util.ValueCell[Int] = ValueCell(0)
+​
+scala&gt; val price = ValueCell(0d)
+price: net.liftweb.util.ValueCell[Double] = ValueCell(0.0)
+​
+scala&gt; val total = price.lift(_ * quantity)
+total: net.liftweb.util.Cell[Double] = FuncCell1(ValueCell(0.0),&lt;function1&gt;)
+​
+scala&gt; total.get
+res1: Double = 0.0
+​
+scala&gt; quantity.set(10)
+res2: Int = 10
+​
+scala&gt; price.set(0.5d)
+res3: Double = 0.5
+​
+scala&gt; total.get       
+res4: Double = 5.0
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Okay... pretty nifty... we can define relationships that are arbitrarily complex between <tt>Cell</tt>s and they know how to calculate themselves.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-6.html#Next">Previous: Chapter 6</a></span>
+<span class="up"><a class="up" href="index-Chapter-6.html">Up: Chapter 6</a></span>
+<span class="next"><a class="next" name="Next" href="index-6.2.html#prev">Next: Section 6.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

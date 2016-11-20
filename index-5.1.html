@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-5.html#Next">Previous: Chapter 5</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.2.html#prev">Next: Section 5.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-5.1">5.1</a> Introduction
+</h2>
+<div class="Standard">
+Lift gives you access to low level HTTP requests, either within the scope of an session or outside the scope of a session. In sessionless or stateless mode, Lift does not use the container’s session management machinery to add a cookie to the <tt>HTTP</tt> response and does not make <tt>SessionVar</tt> or <tt>ContainerVar</tt> available during the request. Stateless REST requests do not require session affinity. Authentication for stateless REST handling can be done via <a class="URL" href="http://oauth.net/">OAuth</a>. If the requests are handled statefully, a container session will be created if the <tt>JSESSIONID</tt> cookie is not supplied as part of the request and the <tt>JSESSIONID</tt> cookie will be included with the response.
+</div>
+<div class="Standard">
+Lift makes use of Scala’s pattern matching to allow you match incoming HTTP requests, extract values as part of the pattern matching process and return the results. Scala’s pattern matching is very, very powerful. It allows both the declaration of a pattern that must be matched, wildcard values (a sub-expression may match any supplied value), wildcard values extracted into variables, and explicit extractors (imperative logic applied to a value to determine if it should match and if it does, extract it into a variable). Lift tests a Scala <tt>PartialFunction[Req, () =&gt; Box[LiftResponse]]</tt> to see if it is defined for a given <tt>Req</tt>, which represents an HTTP request. If there is a match, Lift will take the resulting function, apply it to get a <tt>Box[LiftResponse]</tt> and if the <tt>Box</tt> is full, the response will be sent back to the browser. That’s a mouth-full. Let’s look at examples.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-5.html#Next">Previous: Chapter 5</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.2.html#prev">Next: Section 5.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

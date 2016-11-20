@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-6.2.html#Next">Previous: Section 6.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-6.html">Up: Chapter 6</a></span>
+<span class="next"><a class="next" name="Next" href="index-6.4.html#prev">Next: Section 6.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-6.3">6.3</a> Shared Shopping
+</h2>
+<div class="Standard">
+Let’s move onto a real code example. You can find this code at <a class="URL" href="https://github.com/dpp/simply_lift/tree/master/samples/shopwithme">Shop with Me source</a>.
+</div>
+<div class="Standard">
+The example is going to be a simple shopping site. There are a bunch of items that you can view. You have a shopping cart. You can add items to the cart. If you’re viewing the cart in multiple tabs or browser windows, the cart in all tabs/windows will update when you change the cart. Further, you can share your cart with someone else and any changes to the cart will be propagated to all the different browsers sharing the same cart.
+</div>
+<div class="Standard">
+The data model is the same that we used in the REST chapter (see<a class="Reference" href="#item_model"> on page 1↓</a>).
+</div>
+<div class="Standard">
+Let’s look at the shopping cart definition:
+</div>
+<div class="listing">
+<div class="caption">
+Cart.scala
+</div>
+<pre class="listing brush: scala">package code
+package lib
+​
+import model.Item
+​
+import net.liftweb._
+import util._
+​
+/**
+ * The shopping cart
+ */
+class Cart {
+  /**
+   * The contents of the cart
+   */
+  val contents = ValueCell[Vector[CartItem]](Vector())
+​
+  /**
+   * The subtotal
+   */
+  val subtotal = contents.lift(_.foldLeft(zero)(_ + 
+                                                _.qMult(_.price)))
+​
+  /**
+   * The taxable subtotal
+   */
+  val taxableSubtotal = contents.lift(_.filter(_.taxable).
+                                      foldLeft(zero)(_ + 
+                                                     _.qMult(_.price)))
+​
+  /**
+   * The current tax rate
+   */
+  val taxRate = ValueCell(BigDecimal("0.07"))
+​
+  /**
+   * The computed tax
+   */
+  val tax = taxableSubtotal.lift(taxRate)(_ * _)
+​
+  /**
+   * The total
+   */
+  val total = subtotal.lift(tax)(_ + _)
+​
+  /**
+   * The weight of the cart
+   */
+  val weight = contents.lift(_.foldLeft(zero)(_ +
+                                              _.qMult(_.weightInGrams)))
+​
+  // Helper methods
+​
+  /**
+   * A nice constant zero
+   */
+  def zero = BigDecimal(0)
+​
+  /**
+   * Add an item to the cart.  If it's already in the cart,
+   * then increment the quantity
+   */
+  def addItem(item: Item) {
+    contents.atomicUpdate(v => v.find(_.item == item) match {
+      case Some(ci) => v.map(ci => ci.copy(qnty = ci.qnty + 
+                                           (if (ci.item == item) 1 else 0)))
+      case _ => v :+ CartItem(item, 1)
+    })
+  }
+​
+  /**
+   * Set the item quantity.  If zero or negative, remove
+   */
+  def setItemCnt(item: Item, qnty: Int) {
+    if (qnty <= 0) removeItem(item)
+    else contents.atomicUpdate(v => v.find(_.item == item) match {
+      case Some(ci) => v.map(ci => ci.copy(qnty =
+                                           (if (ci.item == item) qnty 
+                                            else ci.qnty)))
+      case _ => v :+ CartItem(item, qnty)
+    })
+​
+  }
+​
+  /**
+   * Removes an item from the cart
+   */
+  def removeItem(item: Item) {
+    contents.atomicUpdate(_.filterNot(_.item == item))
+  }
+}
+​
+/**
+ * An item in the cart
+ */
+case class CartItem(item: Item, qnty: Int, 
+                    id: String = Helpers.nextFuncName) {
+​
+  /**
+   * Multiply the quantity times some calculation on the
+   * contained Item (e.g., getting its weight)
+   */
+  def qMult(f: Item => BigDecimal): BigDecimal = f(item) * qnty
+}
+​
+/**
+ * The CartItem companion object
+ */
+object CartItem {
+  implicit def cartItemToItem(in: CartItem): Item = in.item
+}
+</pre>
+</div>
+<div class="Standard">
+Looks pretty straight forward. You’ve got 2 <tt>ValueCell</tt>s, the cart contents and the tax rate. You’ve gota bunch of calculated <tt>Cell</tt>s. At the bottom of the <tt>Cart</tt> class definition are some helper methods that allow you to add, remove and update cart contents. We also define the <tt>CartItem</tt> case class that contains the <tt>Item</tt> and the <tt>qnty</tt> (quantity).
+</div>
+<div class="Standard">
+So far, so good. Next, let’s look at the way we display all the items:
+</div>
+<div class="listing">
+<div class="caption">
+AllItemsPage.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import model.Item
+import comet._
+​
+import net.liftweb._
+import http._
+import sitemap._
+import util._
+import Helpers._
+​
+object AllItemsPage {
+  // define the menu item for the page that
+  // will display all items
+  lazy val menu = Menu.i("Items") / "item" >>
+  Loc.Snippet("Items", render)
+  
+  // display the items
+  def render =
+    "tbody *" #> renderItems(Item.inventoryItems)
+​
+  // for a list of items, display those items
+  def renderItems(in: Seq[Item]) =
+    "tr" #> in.map(item => {
+      "a *" #> item.name &
+      "a [href]" #> AnItemPage.menu.calcHref(item) &
+      "@description *" #> item.description &
+      "@price *" #> item.price.toString &
+      "@add_to_cart [onclick]" #>
+      SHtml.ajaxInvoke(() => TheCart.addItem(item))})
+}
+​
+</pre>
+</div>
+<div class="Standard">
+We define our <tt>SiteMap</tt> entry:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  lazy val menu = Menu.i("Items") / "item" &gt;&gt;
+    Loc.Snippet("Items", render)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+So, when the user browses to <tt>/item</tt>, they’re presented with all the items in inventory. 
+</div>
+<div class="Standard">
+The template for displaying <tt>Item</tt>s looks like:
+</div>
+<div class="listing">
+<div class="caption">
+items.html
+</div>
+<pre class="listing brush: xml">&lt;table class="lift:Items">
+  &lt;tbody>
+    &lt;tr>
+      &lt;td name="name">&lt;a href="#">Name&lt;/a>&lt;/td>
+      &lt;td name="description">Desc&lt;/td>
+      &lt;td name="price">$50.00&lt;/td>
+      &lt;td>&lt;button name="add_to_cart">Add to Cart&lt;/button>&lt;/td>
+    &lt;/tr>
+  &lt;/tbody>
+&lt;/table>
+</pre>
+</div>
+<div class="Standard">
+Next, let’s look at the code for displaying an <tt>Item</tt>:
+</div>
+<div class="listing">
+<div class="caption">
+AnItemPage.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import model.Item
+import comet._
+​
+import net.liftweb._
+import util._
+import Helpers._
+import http._
+import sitemap._
+​
+import scala.xml.Text
+​
+object AnItemPage {
+  // create a parameterized page
+  def menu = Menu.param[Item]("Item", Loc.LinkText(i => Text(i.name)),
+                              Item.find _, _.id) / "item" / *
+}
+​
+class AnItemPage(item: Item) {
+  def render = "@name *" #> item.name &
+  "@description *" #> item.description &
+  "@price *" #> item.price.toString &
+  "@add_to_cart [onclick]" #> SHtml.ajaxInvoke(() => TheCart.addItem(item))
+}
+​
+</pre>
+</div>
+<div class="Standard">
+This defines what happens when the user goes to <tt>/item/1234</tt>. This is more “controller-like” than most of the other Lift code. Let’s look at the menu item definition:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  def menu = Menu.param[Item]("Item", Loc.LinkText(i =&gt; Text(i.name)),
+                              Item.find _, _.id) / "item" / *
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+We are defining a parameterized <tt>Menu</tt> entry. The parameter type is <tt>Item</tt>. That means that the page will display an <tt>Item</tt> and that we must be able to calculate the <tt>Item</tt> based on the request.
+</div>
+<div class="Standard">
+<tt>"Item"</tt> is the name of the menu entry. 
+</div>
+<div class="Standard">
+<tt>Loc.LinkText(i =&gt; Text(i.name))</tt> takes an item and generates the display text for the menu entry.
+</div>
+<div class="Standard">
+<tt>Item.find _</tt> is a function that takes a <tt>String</tt> and converts it to <tt>Box[Item]</tt>. It looks up the Item based on the parameter in the request that we’re interested in.
+</div>
+<div class="Standard">
+<tt>_.id</tt> is a function (<tt>Item =&gt; String</tt>) that takes an <tt>Item</tt> and returns a <tt>String</tt> that represents how to build a URL that represents the Item page. This is used by <tt>"a [href]" #&gt; AnItemPage.menu.calcHref(item)</tt> to convert an <tt>Item</tt> to the HREF for the page that display the <tt>Item</tt>.
+</div>
+<div class="Standard">
+Finally, the URL is defined by <tt>/ "item" / *</tt> which is pretty much what it looks like. It’ll match an incoming request of the form <tt>/item/xxx</tt> and <tt>xxx</tt> is passed to the <tt>String =&gt; Box[Item]</tt> function to determine the <tt>Item</tt> associated with the URL.
+</div>
+<div class="Standard">
+So, we can display all the items. Navigate from all the items to a single item. Each item has a button that allows you to add the <tt>Item</tt> to the shopping cart. The <tt>Item</tt> is added to the cart with this code: <tt>SHtml.ajaxInvoke(() =&gt; TheCart.addItem(item))})</tt>. The <tt>TheCart.addItem(item)</tt> can be called from anywhere in the application without regard for what needs to be updated when the cart is changed.
+</div>
+<div class="Standard">
+Let’s look at how the cart is displayed and managed:
+</div>
+<div class="listing">
+<div class="caption">
+CometCart.scala
+</div>
+<pre class="listing brush: scala">package code
+package comet
+​
+import lib._
+​
+import net.liftweb._
+import common._
+import http._
+import util._
+import js._
+import js.jquery._
+import JsCmds._
+import scala.xml.NodeSeq
+import Helpers._
+​
+/**
+ * What's the current cart for this session
+ */
+object TheCart extends SessionVar(new Cart())
+​
+/**
+ * The CometCart is the CometActor the represents the shopping cart
+ */
+class CometCart extends CometActor {
+  // our current cart
+  private var cart = TheCart.get
+​
+  /**
+   * Draw yourself
+   */
+  def render = {
+    "#contents" #> (
+      "tbody" #> 
+      Helpers.findOrCreateId(id =>  // make sure tbody has an id
+        // when the cart contents updates
+        WiringUI.history(cart.contents) {
+          (old, nw, ns) => {
+            // capture the tr part of the template
+            val theTR = ("tr ^^" #> "**")(ns)
+            
+            def ciToId(ci: CartItem): String = ci.id + "_" + ci.qnty
+​
+            // build a row out of a cart item
+            def html(ci: CartItem): NodeSeq = {
+              ("tr [id]" #> ciToId(ci) & 
+               "@name *" #> ci.name &
+               "@qnty *" #> SHtml.
+               ajaxText(ci.qnty.toString,
+                        s => {
+                          TheCart.
+                          setItemCnt(ci, 
+                                     Helpers.toInt(s))
+                        }, "style" -> "width: 20px;") &
+               "@del [onclick]" #> SHtml.
+             ajaxInvoke(() => TheCart.removeItem(ci)))(theTR)
+            }
+            
+            // calculate the delta between the lists and
+            // based on the deltas, emit the current jQuery
+            // stuff to update the display
+            JqWiringSupport.calculateDeltas(old, nw, id)(ciToId _, html _)
+          }
+        })) &
+    "#subtotal" #> WiringUI.asText(cart.subtotal) & // display the subttotal
+    "#tax" #> WiringUI.asText(cart.tax) & // display the tax
+    "#total" #> WiringUI.asText(cart.total) // display the total
+  }
+   
+  /**
+   * Process messages from external sources
+   */
+  override def lowPriority = {
+    // if someone sends us a new cart
+    case SetNewCart(newCart) => {
+      // unregister from the old cart
+      unregisterFromAllDepenencies()
+​
+      // remove all the dependencies for the old cart
+      // from the postPageJavaScript
+      theSession.clearPostPageJavaScriptForThisPage()
+​
+      // set the new cart
+      cart = newCart
+​
+      // do a full reRender including the fixed render piece
+      reRender(true)
+    }
+  }
+}
+​
+/**
+ * Set a new cart for the CometCart
+ */
+case class SetNewCart(cart: Cart)
+</pre>
+</div>
+<div class="Standard">
+Let’s walk through the code:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object TheCart extends SessionVar(new Cart())
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+We define a <tt>SessionVar</tt> that holds the shopping cart.
+</div>
+<div class="Standard">
+Our <tt>CometActor</tt> captures the the current cart from the <tt>SessionVar</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">class CometCart extends CometActor {
+  // our current cart
+  private var cart = TheCart.get
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Next, let’s see how to draw the <tt>cart.total</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">"#total" #&gt; WiringUI.asText(cart.total) // display the total
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+That’s pretty much the way it should be.
+</div>
+<div class="Standard">
+Let’s look at the gnarly piece... how to draw or redraw the cart contents based on changes and only send the JavaScript the will manipulate the browser DOM to add or remove items from the cart:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">"#contents" #&gt; (
+      "tbody" #&gt; 
+      Helpers.findOrCreateId(id =&gt;  // make sure tbody has an id
+        // when the cart contents updates
+        WiringUI.history(cart.contents) {
+          (old, nw, ns) =&gt; {
+            // capture the tr part of the template
+            val theTR = ("tr ^^" #&gt; "**")(ns)
+            
+            def ciToId(ci: CartItem): String = ci.id + "_" + ci.qnty
+​
+            // build a row out of a cart item
+            def html(ci: CartItem): NodeSeq = {
+              ("tr [id]" #&gt; ciToId(ci) &amp; 
+               "@name *" #&gt; ci.name &amp;
+               "@qnty *" #&gt; SHtml.
+               ajaxText(ci.qnty.toString,
+                        s =&gt; {
+                          TheCart.
+                          setItemCnt(ci, 
+                                     Helpers.toInt(s))
+                        }, "style" -&gt; "width: 20px;") &amp;
+               "@del [onclick]" #&gt; SHtml.
+             ajaxInvoke(() =&gt; TheCart.removeItem(ci)))(theTR)
+            }
+            
+            // calculate the delta between the lists and
+            // based on the deltas, emit the current jQuery
+            // stuff to update the display
+            JqWiringSupport.calculateDeltas(old, nw, id)(ciToId _, html _)
+          }
+        }))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+First, we make sure we know the <tt>id</tt> of the <tt>&lt;tbody&gt;</tt> element: <tt>"tbody" #&gt; Helpers.findOrCreateId(id =&gt;</tt>
+</div>
+<div class="Standard">
+Next, wire the <tt>CometCart</tt> up to the <tt>cart.contents</tt> such that when the contents change, we get the old value (<tt>old</tt>), the new value (<tt>nw</tt>) and the memoized <tt>NodeSeq</tt> (the template used to do the rendering): <tt>WiringUI.history(cart.contents) { (old, nw, ns) =&gt; {</tt>
+</div>
+<div class="Standard">
+Capture the part of the template associated with the <tt>&lt;tr&gt;</tt> element in the <tt>theTR</tt> variable: <tt>val theTR = ("tr ^^" #&gt; "**")(ns)</tt>
+</div>
+<div class="Standard">
+Based on a <tt>CartItem</tt>, return a stable id for the DOM node the represents the <tt>CartItem</tt>: 
+</div>
+<div class="Standard">
+The <tt>html</tt> method converts a <tt>CartItem</tt> to a <tt>NodeSeq</tt> including Ajax controls for changing quantity and removing the item from the cart.
+</div>
+<div class="Standard">
+Finally, based on the deltas between the old list of <tt>CartItem</tt> and the new list, generate the JavaScript that will manipulate the DOM by inserting and removing the appropriate DOM elements: <tt>JqWiringSupport.calculateDeltas(old, nw, id)(ciToId _, html _)</tt>
+</div>
+<div class="Standard">
+Next, let’s see how to change the cart. If we want to share the shopping cart between two browser sessions... two people shopping at their browser, but putting things in a single cart, we need a way to change the cart. We process the <tt>SetNewCart</tt> message to <tt>CometCart</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // if someone sends us a new cart
+    case SetNewCart(newCart) =&gt; {
+      // unregister from the old cart
+      unregisterFromAllDepenencies()
+​
+      // remove all the dependencies for the old cart
+      // from the postPageJavaScript
+      theSession.clearPostPageJavaScriptForThisPage()
+​
+      // set the new cart
+      cart = newCart
+​
+      // do a full reRender including the fixed render piece
+      reRender(true)
+    }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+There are two lines in the above code that hint at how Wiring interacts with Lift’s Comet support: <tt>unregisterFromAllDepenencies()</tt> and <tt>theSession.clearPostPageJavaScriptForThisPage()</tt>
+</div>
+<div class="Standard">
+When a <tt>CometActor</tt> depends on something in <tt>WiringUI</tt>, Lift generates a weak reference between the <tt>Cell</tt> and the <tt>CometActor</tt>. When the <tt>Cell</tt> changes value, it pokes the <tt>CometActor</tt>. The <tt>CometActor</tt> then updates the browser’s screen real estate associated with changes to <tt>Cell</tt>s. <tt>unregisterFromAllDepenencies()</tt> disconnects the <tt>CometActor</tt> from the <tt>Cell</tt>s. <tt>theSession.clearPostPageJavaScriptForThisPage()</tt> removes all the <tt>postPageJavaScript</tt> associated with the <tt>CometActor</tt>. Because the <tt>CometActor</tt> is not associated with a single page, but can appear on many pages, it has its own <tt>postPageJavaScript</tt> context.
+</div>
+<div class="Standard">
+The final piece of the puzzle is how we share a <tt>Cart</tt> across sessions. From the UI perspective, here’s how we display the modal dialog when the user presses the “Share Cart” button:
+</div>
+<div class="listing">
+<div class="caption">
+Link.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import model._
+import comet._
+import lib._
+​
+import net.liftweb._
+import http._
+import util.Helpers._
+import js._
+import JsCmds._
+import js.jquery.JqJsCmds._
+​
+class Link {
+  // open a modal dialog based on the _share_link.html template
+  def request = "* [onclick]" #> SHtml.ajaxInvoke(() => {
+    (for {
+      template <- TemplateFinder.findAnyTemplate(List("_share_link"))
+    } yield ModalDialog(template)) openOr Noop
+      
+  })
+​
+  // close the modal dialog
+  def close = "* [onclick]" #> SHtml.ajaxInvoke(() => Unblock)
+​
+  // Generate the href and link for sharing
+  def generate = {
+    val s = ShareCart.generateLink(TheCart)
+    "a [href]" #> s & "a *" #> s
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+Basically, we use jQuery’s ModalDialog plugin to put a dialog up that contains a link generated by the <tt>ShareCart</tt> object. Let’s look at ShareCart.scala:
+</div>
+<div class="listing">
+<div class="caption">
+ShareCart.scala
+</div>
+<pre class="listing brush: scala">package code
+package lib
+​
+import comet._
+​
+import net.liftweb._
+import common._
+import http._
+import rest.RestHelper
+import util._
+import Helpers._
+​
+// it's a RestHelper
+object ShareCart extends RestHelper {
+  // private state
+  private var carts: Map[String, (Long, Cart)] = Map()
+​
+  // given a Cart, generate a unique sharing code
+  def codeForCart(cart: Cart): String = synchronized {
+    val ret = Helpers.randomString(12)
+​
+    carts += ret -> (10.minutes.later.millis -> cart)
+​
+    ret
+  }
+​
+  /**
+   * Generate the right link to this cart
+   */
+  def generateLink(cart: Cart): String = {
+    S.hostAndPath + "/co_shop/"+codeForCart(cart)
+  }
+​
+  // An extractor that converts a String to a Cart, if
+  // possible
+  def unapply(code: String): Option[Cart] = synchronized {
+    carts.get(code).map(_._2)
+  }
+​
+  // remove any carts that are 10+ minutes old
+  private def cleanup() {
+    val now = Helpers.millis
+    synchronized{
+      carts = carts.filter{
+        case (_, (time, _)) => time > now
+      }
+    }
+    Schedule.schedule(() => cleanup(), 5 seconds)
+  }
+  
+  // clean up every 5 seconds
+  cleanup()
+​
+  // the REST part of the code
+  serve {
+    // match the incoming URL
+    case "co_shop" :: ShareCart(cart) :: Nil Get _ => {
+      // set the cart
+      TheCart.set(cart)
+      
+      // send the SetNewCart message to the CometCart
+      S.session.foreach(
+        _.sendCometActorMessage("CometCart", Empty,
+                                SetNewCart(cart)))
+​
+      // redirect the browser to /
+      RedirectResponse("/")
+    }
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+The code manages the association between random IDs and <tt>Cart</tt>s. If the user browses to <tt>/co_shop/share_cart_id</tt>, <tt>ShareCart</tt> will set <tt>TheCart</tt> to the shared <tt>Cart</tt> and send a <tt>SetNewCart</tt> message to the <tt>CometCart</tt> instance associated with the session.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-6.2.html#Next">Previous: Section 6.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-6.html">Up: Chapter 6</a></span>
+<span class="next"><a class="next" name="Next" href="index-6.4.html#prev">Next: Section 6.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

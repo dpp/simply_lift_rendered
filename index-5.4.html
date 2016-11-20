@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.3.html#Next">Previous: Section 5.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.5.html#prev">Next: Section 5.5</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-5.4">5.4</a> A complete REST example
+</h2>
+<div class="Standard">
+The above code gives us the bits and pieces that we can combine into a full fledged REST service. Let’s do that combination and see what such a service looks like:
+</div>
+<div class="listing">
+<div class="caption">
+FullRest.scala
+</div>
+<pre class="listing brush: scala">package code
+package lib
+​
+import model._
+​
+import net.liftweb._
+import common._
+import http._
+import rest._
+import util._
+import Helpers._
+import json._
+import scala.xml._
+​
+/**
+ * A full REST example
+ */
+object FullRest extends RestHelper {
+​
+  // Serve /api/item and friends
+  serve( "api" / "item" prefix {
+    
+    // /api/item returns all the items
+    case Nil JsonGet _ => Item.inventoryItems: JValue
+​
+    // /api/item/count gets the item count
+    case "count" :: Nil JsonGet _ => JInt(Item.inventoryItems.length)
+​
+    // /api/item/item_id gets the specified item (or a 404)
+    case Item(item) :: Nil JsonGet _ => item: JValue
+​
+    // /api/item/search/foo or /api/item/search?q=foo
+    case "search" :: q JsonGet _ =>
+      (for {
+        searchString <- q ::: S.params("q")
+        item <- Item.search(searchString)
+      } yield item).distinct: JValue
+​
+    // DELETE the item in question
+    case Item(item) :: Nil JsonDelete _ => 
+      Item.delete(item.id).map(a => a: JValue)
+​
+    // PUT adds the item if the JSON is parsable
+    case Nil JsonPut Item(item) -> _ => Item.add(item): JValue
+    
+    // POST if we find the item, merge the fields from the 
+    // the POST body and update the item
+    case Item(item) :: Nil JsonPost json -> _ => 
+      Item(mergeJson(item, json)).map(Item.add(_): JValue)
+​
+    // Wait for a change to the Items
+    // But do it asynchronously
+    case "change" :: Nil JsonGet _ =>
+      RestContinuation.async {
+        satisfyRequest => {
+          // schedule a "Null" return if there's no other answer
+          // after 110 seconds
+          Schedule.schedule(() => satisfyRequest(JNull), 110 seconds)
+​
+          // register for an "onChange" event.  When it
+          // fires, return the changed item as a response
+          Item.onChange(item => satisfyRequest(item: JValue))
+        }
+      }
+  })
+}
+</pre>
+</div>
+<div class="Standard">
+The whole service is JSON only and contained in a single <tt>serve</tt> block and uses the <tt>prefix</tt> helper to define all the requests under <tt>/api/item</tt> as part of the service.
+</div>
+<div class="Standard">
+The first couple of patterns are a re-hash of what we’ve already covered:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // /api/item returns all the items
+    case Nil JsonGet _ =&gt; Item.inventoryItems: JValue
+​
+    // /api/item/count gets the item count
+    case "count" :: Nil JsonGet _ =&gt; JInt(Item.inventoryItems.length)
+​
+    // /api/item/item_id gets the specified item (or a 404)
+    case Item(item) :: Nil JsonGet _ =&gt; item: JValue
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The next is a search feature at <tt>/api/item/search</tt>. Using a little Scala library fun, we create a list of the request path elements that come after the <tt>search</tt> element and all the query parameters named <tt>q</tt>. Based on these, we search for all the <tt>Item</tt>s that match the search term. We wind up with a <tt>List[Item]</tt> and we remove duplicates with <tt>distinct</tt> and finally coerse the <tt>List[Item]</tt> to a <tt>JValue</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // /api/item/search/foo or /api/item/search?q=foo
+    case "search" :: q JsonGet _ =&gt;
+      (for {
+        searchString &lt;- q ::: S.params("q")
+        item &lt;- Item.search(searchString)
+      } yield item).distinct: JValue
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Next, let’s see how to delete an <tt>Item</tt>:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // DELETE the item in question
+    case Item(item) :: Nil JsonDelete _ =&gt; 
+      Item.delete(item.id).map(a =&gt; a: JValue)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The only real difference is we’re looking for a <tt>JsonDelete</tt> HTTP request.
+</div>
+<div class="Standard">
+Let’s see how we add an <tt>Item</tt> with a PUT:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // PUT adds the item if the JSON is parsable
+    case Nil JsonPut Item(item) -&gt; _ =&gt; Item.add(item): JValue
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Note the <tt>Item(item) -&gt; _</tt> after <tt>JsonPut</tt>. The extraction signature for <tt>JsonPut</tt> is <tt>(List[String], (JValue, Req))</tt>. The <tt>List[String]</tt> part is simple... it’s a <tt>List</tt> that contains the request path. The second part of the Pair is a Pair itself that contains the <tt>JValue</tt> and the underlying <tt>Req</tt> (in case you need to do something with the request itself). Because there’s a <tt>def unapply(in: JValue): Option[Item]</tt> method in the <tt>Item</tt> singleton, we can extract (pattern match) the <tt>JValue</tt> that is built from the PUT request body. This means if the user PUTs a JSON blob that can be turned into an <tt>Item</tt> the pattern will match and we’ll evaluate the right hand side of the case statement which adds the <tt>Item</tt> to inventory. That’s a big ole dense pile of information. So, we’ll try it again with POST.
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    case Item(item) :: Nil JsonPost json -&gt; _ =&gt; 
+      Item(mergeJson(item, json)).map(Item.add(_): JValue)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In this case, we’re match a POST on <tt>/api/item/1234</tt> that has some parsable JSON in the POST body. The <tt>mergeJson</tt> method takes all the fields in the found <tt>Item</tt> and replaces them with any of the fields in the JSON in the POST body. So a POST body of <tt>{"qnty": 123}</tt> would replace the <tt>qnty</tt> field in the <tt>Item</tt>. The <tt>Item</tt> is then added back into the backing store.
+</div>
+<div class="Standard">
+Cool. So, we’ve got a variety of GET support in our REST service, a DELETE, PUT and POST. All using the patterns that <tt>RestHelper</tt> gives us.
+</div>
+<div class="Standard">
+Now we have some fun.
+</div>
+<div class="Standard">
+One of the features of Lift’s HTML side is support for Comet (server push via long-polling.) If the web container supports it, Lift will automatically use asynchronous support. That means that during a long poll, while no computations are being performed related to the servicing of the request, no threads will be consumed. This allows lots and lots of open long polling clients. Lift’s REST support includes asynchronous support. In this case, we’ll demonstrate opening an HTTP request to <tt>/api/item/change</tt> and wait for a change to the backing store. The request will be satisfied with a change to the backing store or a JSON JNull after 110 seconds:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    case "change" :: Nil JsonGet _ =&gt;
+      RestContinuation.async {
+        satisfyRequest =&gt; {
+          // schedule a "Null" return if there’s no other answer
+          // after 110 seconds
+          Schedule.schedule(() =&gt; satisfyRequest(JNull), 110 seconds)
+​
+          // register for an "onChange" event.  When it
+          // fires, return the changed item as a response
+          Item.onChange(item =&gt; satisfyRequest(item: JValue))
+        }
+      }
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+If we receive a GET request to <tt>/api/item/change</tt>, invoke <tt>RestContinuation.async</tt>. We pass a closure that sets up the call. We set up the call by scheduling a <tt>JNull</tt> to be sent after 110 seconds. We also register a function which is invoked when the backing store is changed. When either event (110 seconds elapses or the backing store changes), the functions will be invoked and they will apply the <tt>satifyRequest</tt> function which will invoke the continuation and send the response back to the client. Using this mechanism, you can create long polling services that do not consume threads on the server. Note too that the <tt>satisfyRequest</tt> function is fire-once so you can call it lots of times, but only the first time counts.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-5.3.html#Next">Previous: Section 5.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-5.html">Up: Chapter 5</a></span>
+<span class="next"><a class="next" name="Next" href="index-5.5.html#prev">Next: Section 5.5</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

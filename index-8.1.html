@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-8.html#Next">Previous: Chapter 8</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.2.html#prev">Next: Section 8.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-8.1">8.1</a> <a class="Label" name="sec:Localization"> </a>Localization
+</h2>
+<div class="Standard">
+Lift has broad support for localization at the page and element level.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.1.1">8.1.1</a> Localizing Templates
+</h3>
+<div class="Standard">
+The locale for the current request is calculated based on the function in <tt>LiftRules.localeCalculator</tt>. By default, the function looks at the <a class="URL" href="http://download.oracle.com/javaee/1.2.1/api/javax/servlet/ServletRequest.html#getLocale%28%29">Locale in the HTTP request</a>. But you can change this function to look at the Locale for the current user by changing <tt>LiftRules.localeCalculator</tt>.
+</div>
+<div class="Standard">
+When a template is requested, Lift’s <tt>TemplateFinder</tt> looks for a template with the suffix <tt>_langCOUNTRY.html</tt>, then <tt>_lang.html</tt>, then <tt>.html</tt>. So, if you’re loading <tt>/frog</tt> and your Locale is <tt>enUS</tt>, then Lift will look for <tt>/frog_enUS.html</tt>, then <tt>/frog_en.html</tt>, then <tt>/frog.html</tt>. But if your Locale is Czech, then Lift would look for <tt>/frog_csCZ.html</tt>, <tt>/frog_cs.html</tt>, and <tt>/frog.html</tt>. The same lookup mechanism is used for templates accessed via the Surround (See <a class="Reference" href="index-9.14.html#sec:Tail">↓</a>) and Embed (See <a class="Reference" href="index-9.13.html#sec:Embed">↓</a>) snippets. So, at the template level, Lift offers very flexible templating.
+</div>
+<div class="Standard">
+<div class="Frameless" style="width: 100%;">
+Note: Lift parses all templates in UTF-8. Please make sure your text editor is set to UTF-8 encoding.
+</div>
+
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.1.2">8.1.2</a> Resource Lookup
+</h3>
+<div class="Standard">
+Lift uses the following mechanism to look up resources. Localized resources are stored in template files along-side your HTML pages. The same parser is used to load resources and the pages themselves. A global set of resources is searched for in the following files: <tt>/_resources.html</tt>, <tt>/templates-hidden/_resources.html</tt>, and <tt>/resources-hidden/_resources.html</tt>. Keep in mind that Lift will look for the _resources file using the suffixes based on the Locale.
+</div>
+<div class="Standard">
+The resource file should be in the following format:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">&lt;resources&gt;
+  &lt;res name="welcome"&gt;Benvenuto&lt;/res&gt;
+  &lt;res name="thank.you"&gt;Grazie&lt;/res&gt;
+  &lt;res name="locale"&gt;Località&lt;/res&gt;
+  &lt;res name="change"&gt;Cambia&lt;/res&gt;
+&lt;/resources&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+In addition to global resource files, there are per-page resource files (based on the current <tt>Req</tt>.) If you are currently requesting page <tt>/foo/bar</tt>, the following resource files will also be consulted: <tt>/foo/_resources_bar.html</tt>, <tt>/templates-hidden/foo/_resources_bar.html</tt>, and <tt>/foo/resources-hidden/_resources_bar.html</tt> (and all Locale-specific suffixes.) You can choose to create a separate resource file for each locale, or lump multiple locales into the <tt>_resources_bar.html</tt> file itself using the following format:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">&lt;resources&gt;
+  &lt;res name="hello" lang="en" default="true"&gt;Hello&lt;/res&gt;
+  &lt;res name="hello" lang="en" country="US"&gt;Howdy, dude!&lt;/res&gt;
+  &lt;res name="hello" lang="it"&gt;Benvenuto&lt;/res&gt;
+  &lt;res name="thank.you" lang="en" default="true"&gt;Thank You&lt;/res&gt;
+  &lt;res name="thank.you" lang="it"&gt;Grazie&lt;/res&gt;
+  &lt;res name="locale" lang="en" default="true"&gt;Locale&lt;/res&gt;
+  &lt;res name="locale" lang="it"&gt;Località&lt;/res&gt;
+  &lt;res name="change" lang="en" default="true"&gt;Change&lt;/res&gt;
+  &lt;res name="change" lang="it"&gt;Cambia&lt;/res&gt;
+&lt;/resources&gt;
+</pre>
+</div>
+
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.1.3">8.1.3</a> Accessing Resources
+</h3>
+<div class="Standard">
+Lift makes it easy to access resources.
+</div>
+<div class="Standard">
+From snippets: <tt>&lt;span class="lift:Loc.hello"&gt;This Hello will be replaced if possible&lt;/span&gt;</tt> Note that the value after the . in the snippet invocation is used to look up the resource name.
+</div>
+<div class="Standard">
+From code:
+</div>
+<ul>
+<li>
+<tt>S.loc("hello")</tt> - return a <tt>Box[NodeSeq]</tt> containing the localized value for the resource named “hello”.
+</li>
+<li>
+<tt>S.??("Hello World")</tt> - look for a resource named “Hello World” and return the String value for that resource. If the resource is not found, return “Hello World”.
+</li>
+
+</ul>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-8.1.4">8.1.4</a> Conclusion
+</h3>
+<div class="Standard">
+Lift offers a broad range of mechanisms for localizing your application on a page-by-page and resource-by-resource by-resource basis.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-8.html#Next">Previous: Chapter 8</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.2.html#prev">Next: Section 8.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

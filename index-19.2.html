@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-19.1.html#Next">Previous: Section 19.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-19.html">Up: Chapter 19</a></span>
+<span class="next"><a class="next" name="Next" href="index-Part-III.html#prev">Next: Part III</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-19.2">19.2</a> Solution
+</h2>
+<div class="Standard">
+Try:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">&amp; ".data_as_object *" #&gt; {
+   Script(JsCrVar("myObject", JsObj(("persons", JsArray(
+​
+       JsObj(("name", "Thor"), ("race", "Asgard")),
+       JsObj(("name", "Todd"), ("race", "Wraith")),
+       JsObj(("name", "Rodney"), ("race", "Human"))
+   )))))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+<tt>JsExp</tt> are also <tt>Node</tt>s, so they render out, but they render out escaped. Putting <tt>Script()</tt> around them turns them into:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;script&gt;
+// &lt;![CDATA[
+....
+]]&gt;
+&lt;/script&gt;
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-19.1.html#Next">Previous: Section 19.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-19.html">Up: Chapter 19</a></span>
+<span class="next"><a class="next" name="Next" href="index-Part-III.html#prev">Next: Part III</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.3.html#Next">Previous: Section 4.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.5.html#prev">Next: Section 4.5</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.4">4.4</a> <tt>RequestVar</tt>s
+</h2>
+<div class="Standard">
+In this example, we’re going to preserve state during the request by placing state in <tt>RequestVar</tt>s (see <a class="Reference" href="index-7.8.html#sec:SessionVars-and-RequestVars">7.8 on page 1↓</a>).
+</div>
+<div class="Standard">
+Lift has type-safe containers for state called <tt>XXXVar</tt>s. There are <tt>SessionVar</tt>s that have session scope, <tt>WizardVar</tt>s that are scoped to a Wizard and <tt>RequestVar</tt>s that are scoped to the current request<span class="FootOuter"><span class="SupFootMarker"> [F] </span><span class="HoverFoot"><span class="SupFootMarker"> [F] </span>In this case, “request” means full HTML page load and all subsquent Ajax operations on that page. There’s also a <tt>TransientRequestVar</tt> that has the scope of the current HTTP request.</span></span>. <tt>Var</tt>s are defined as singletons: <tt>private object name extends RequestVar("")</tt>. They are typed (in this case, the type is <tt>String</tt>) and they have a default value.
+</div>
+<div class="Standard">
+So, let’s look at the HTML which looks shockingly like the HTML in the last two examples:
+</div>
+<div class="listing">
+<div class="caption">
+requestvar.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    Using RequestVars to store state
+  &lt;/div>
+      
+  &lt;div>
+    &lt;form class="lift:ReqVar?form=post">
+      Name: &lt;input name="name">&lt;br>
+      Age: &lt;input name="age" id="the_age" value="0">&lt;br>
+      &lt;input type="submit" value="Submit">
+    &lt;/form>
+  &lt;/div>
+&lt;/div>
+​
+</pre>
+</div>
+<div class="Standard">
+Now, let’s look at the snippet code:
+</div>
+<div class="listing">
+<div class="caption">
+ReqVar.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import common._
+import util.Helpers._
+import scala.xml.NodeSeq
+​
+/**
+ * A RequestVar-based snippet
+ */
+object ReqVar {
+  // define RequestVar holders for name, age, and whence
+  private object name extends RequestVar("")
+  private object age extends RequestVar("0")
+  private object whence extends RequestVar(S.referer openOr "/")
+​
+  def render = {
+    // capture the whence... which forces evaluation of
+    // the whence RequestVar unless it's already been set
+    val w = whence.is
+​
+    // we don't need an explicit function because RequestVar
+    // extends Settable{type=String}, so Lift knows how to
+    // get/set the RequestVar for text element creation
+    "name=name" #> SHtml.textElem(name) &
+    // add a hidden field that sets whence so we
+    // know where to go
+    "name=age" #> (SHtml.textElem(age) ++ 
+                   SHtml.hidden(() => whence.set(w))) &
+    "type=submit" #> SHtml.onSubmitUnit(process)
+  }
+​
+  // process the same way as
+  // in Stateful
+  private def process() =
+    asInt(age.is) match {
+      case Full(a) if a < 13 => S.error("Too young!")
+      case Full(a) => {
+        S.notice("Name: "+name)
+        S.notice("Age: "+a)
+        S.redirectTo(whence)
+      }
+      
+      case _ => S.error("Age doesn't parse as a number")
+    }
+}
+</pre>
+</div>
+<div class="Standard">
+The snippet is a singleton because the state is kept in the <tt>RequestVar</tt>s.
+</div>
+<div class="Standard">
+We use <tt>SHtml.textElem()</tt> to generate the <tt>&lt;input&gt;</tt> tag. We can pass the <tt>RequestVar</tt> into the method and the function that gets/sets the <tt>RequestVar</tt> is generated for us.
+</div>
+<div class="Standard">
+The use of this mechanism for doing stateful forms versus the StatefulSnippet mechanism is one of personal choice. Neither one is better, they are just different.
+</div>
+<div class="Standard">
+Next, let’s look at how to get more granular with error messages.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.3.html#Next">Previous: Section 4.3</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.5.html#prev">Next: Section 4.5</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

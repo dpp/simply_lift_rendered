@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-7.html#Next">Previous: Chapter 7</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.2.html#prev">Next: Section 7.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-7.1">7.1</a> Snippets<a class="Label" name="sec:Snippets"> </a>
+</h2>
+<div class="Standard">
+Lift is built on the Scala programming language. Scala is a hybrid of Functional and Object Oriented. Two core principles of functional programming languages are immutability and transformation.
+</div>
+<div class="Standard">
+Immutability means that once a data structure is instantiated, it will not change for its life. More concretely, once you instantiate an object, you can freely pass the object around and the object will always return the same values for all its methods. Java’s <tt>String</tt> class is immutable. Python requires immutable classes as indexes to dictionaries. Immutability is also very powerful for multithreaded applications because you can pass references to immutable objects across thread boundaries without having to worry about locking or synchronization because you are guaranteed that the objects will not change state.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.1">7.1.1</a> Snippet <tt>NodeSeq =&gt; NodeSeq</tt>
+</h3>
+<div class="Standard">
+Transformation provides an alternative to “writing to a stream” for composing web pages. Rather than having tags that cause characters to be streamed as part of the response, Lift loads the view and for each “snippet” encountered in the view, Lift transforms just the markup associated with the snippet invocation into a new set of HTML.
+</div>
+<div class="Standard">
+Let’s make it more concrete, here’s some markup:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;span class="foo lift:WhatTime"&gt;The time is &lt;span id="current_time"&gt;currentTime&lt;/span&gt;&lt;/span&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And the associated snippet:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">object WhatTime {
+  def render = "#current_time" #&gt; (new Date).toString
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The resulting markup will look like:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;span class="foo"&gt;The time is Mon Dec 06 21:01:36 PST 2010&lt;/span&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Let’s walk through how this works. First, the class attribute in the <tt>&lt;span&gt;</tt> has two classes, <tt>foo</tt> and <tt>lift:WhatTime</tt>. Any class attribute that starts with <tt>lift:</tt> indicates a snippet invocation. A snippet is a function that transforms HTML to HTML, or in Scala, <tt>NodeSeq =&gt; NodeSeq</tt>.
+</div>
+<div class="Standard">
+Lift looks up the snippet named <tt>WhatTime</tt> (See <a class="Reference" href="index-23.1.html#sec:Snippet-Resolution">↓</a>) which in this case resolves to a singleton and invokes the <tt>render</tt> method. The render method returns a <tt>NodeSeq =&gt; NodeSeq</tt> built using Lift’s CSS Selector Transforms (See <a class="Reference" href="index-7.10.html#sec:CSS-Selector-Transforms">↓</a>). The parameter to the function is the <tt>Element</tt> that caused the snippet invocation with the actual snippet invocation removed from the <tt>class</tt> attribute: 
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">&lt;span class="foo"&gt;The time is &lt;span id="current_time"&gt;currentTime&lt;/span&gt;&lt;/span&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The function is then applied and the resulting <tt>NodeSeq</tt> is inserted in the page where the original <tt>Element</tt> was. Because the page is composed of immutable XML objects, we can transform <tt>NodeSeq =&gt; NodeSeq</tt> and not worry about anything getting changed out from under us. We also know that we’ve got valid markup through the entire page transformation process.
+</div>
+<div class="Standard">
+Further, retaining the page as a well formed XML document allows certain tags to be put in the <tt>&lt;head&gt;</tt> tag and other tags to be inserted just before the close of the <tt>&lt;/body&gt;</tt> tag (See <a class="Reference" href="index-7.17.html#sec:Page-rewriting">↓</a>).
+</div>
+<div class="Standard">
+But the simplicity of the transform is simulateously easy to understand and very powerful.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.2">7.1.2</a> Snippet instances
+</h3>
+<div class="Standard">
+The snippet could also be defined as:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">class WhatTime {
+  private var x = 0
+​
+  def render = {
+    x += 1
+    "#current_time" #&gt; ((new Date).toString + " and you’ve seen this message "+x+" times)
+  }
+}
+</pre>
+</div>
+
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.3">7.1.3</a> Multiple methods on a snippet class
+</h3>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.4">7.1.4</a> Inter-snippet communication
+</h3>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.5">7.1.5</a> Recursive Snippets
+</h3>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-7.1.6">7.1.6</a> Snippet parameters
+</h3>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-7.html#Next">Previous: Chapter 7</a></span>
+<span class="up"><a class="up" href="index-Chapter-7.html">Up: Chapter 7</a></span>
+<span class="next"><a class="next" name="Next" href="index-7.2.html#prev">Next: Section 7.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

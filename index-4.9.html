@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.8.html#Next">Previous: Section 4.8</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.10.html#prev">Next: Section 4.10</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.9">4.9</a> But sometimes Old Fashioned is good
+</h2>
+<div class="Standard">
+In this chapter, we’ve explored Lift’s form building and processing features and demonstrated the power and value of associating GUIDs on the client with functions on the server. However, sometimes it’s nice to have parameter processing via URL parameters... and that’s easy to do with Lift as well.
+</div>
+<div class="Standard">
+Every page in the examples for this chapter contain:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: xml">	&lt;form action="/query"&gt;
+	  &lt;input name="q"&gt;
+	  &lt;input type="submit" value="Search"&gt;
+	&lt;/form&gt;
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This is a plain old form that generates a URL like: <tt>http://localhost:8080/query?q=catfood</tt> This URL can be copied, pasted, shared, etc.
+</div>
+<div class="Standard">
+Processing this URL is easy:
+</div>
+<div class="listing">
+<div class="caption">
+Query.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import util._
+import Helpers._
+​
+object Query {
+  def results = ClearClearable andThen
+  "li *" #> S.param("q"). // get the query parameter
+  toList. // convert the Box to a List
+  flatMap(q => {
+    ("You asked: "+q) :: // prepend the query
+    (1 to toInt(q)).toList.map(_.toString) // if it can be converted to an Int
+    // convert it and return a sequence of Ints
+  })
+}
+</pre>
+</div>
+<div class="Standard">
+Using <tt>S.param("param_name")</tt> we can extract the query parameter and do something with it.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.8.html#Next">Previous: Section 4.8</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.10.html#prev">Next: Section 4.10</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

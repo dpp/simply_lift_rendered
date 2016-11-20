@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.4.html#Next">Previous: Section 13.4</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.6.html#prev">Next: Section 13.6</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-13.5">13.5</a> Getting Ajaxy
+</h2>
+<div class="Standard">
+The <tt>ClickMe</tt> snippet is a little more complex, but it demonstrates, especially on the “Second Page” the power of Lift’s View First in which no particular component on the page is the dominant component. Here’s the <tt>ClickMe</tt> code:
+</div>
+<div class="listing">
+<div class="caption">
+ClickMe.scala
+</div>
+<pre class="listing brush: scala">// make sure this is the snippet package so Lift
+// can find the snippet
+package code
+package snippet
+​
+// some inputs
+import net.liftweb._
+import util._
+import Helpers._
+import http._
+import js.JsCmds._
+​
+// our snippet
+object ClickMe {
+  // variables associated with the request
+  private object pos extends RequestVar(0)
+  private object cnt extends RequestVar(0)
+​
+  // create a function (NodeSeq => NodeSeq)
+  // set the onClick method of the button
+  def render = {
+    // capture our position on the page
+    val posOnPage = pos.set(pos.is + 1)
+​
+    "button [onclick]" #> 
+    SHtml.ajaxInvoke(() => {
+      cnt.set(cnt.is + 1) // increment the click count
+      Alert("Thanks pos: "+posOnPage+
+          " click count "+cnt)
+    })
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+We define two <tt>RequestVar</tt>s that hold request-scoped values. For Lift, the scope of a request is the initial full HTML page load plus any Ajax requests associated with that page.
+</div>
+<div class="Standard">
+When the snippet’s <tt>render</tt> method is called, we capture the current value for the <tt>pos</tt> <tt>RequestVar</tt>.
+</div>
+<div class="Standard">
+The snippet associates the invocation of an Ajax call with the button’s <tt>onclick</tt> method. When the button is clicked, the function is invoked.
+</div>
+<div class="Standard">
+The function closed over the scope of the position of the button on the page. The buttons all share the <tt>cnt</tt> <tt>RequestVar</tt> and thus for a single page load, the number of button-presses are counted. If you have 5 different browser tabs open to the same page, each tab will have a unique page count.
+</div>
+<div class="Standard">
+This demonstrates the component nature of Lift and why having complex items on a page means not having a front-controller, but having lots of behaviors associated with lots of HTML elements.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-13.4.html#Next">Previous: Section 13.4</a></span>
+<span class="up"><a class="up" href="index-Chapter-13.html">Up: Chapter 13</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.6.html#prev">Next: Section 13.6</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

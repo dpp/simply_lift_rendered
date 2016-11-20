@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.2.html#Next">Previous: Section 8.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.4.html#prev">Next: Section 8.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-8.3">8.3</a> Modules
+</h2>
+<div class="Standard">
+Lift has supported modules from the first version of the project in 2007. Lift’s entire handling of the HTTP request/response cycle is open to hooks. Further, Lift’s templating mechanism where resulting HTML pages are composed by transforming page content via snippets (See <a class="Reference" href="index-7.1.html#sec:Snippets">↑</a>) which are simply functions that take HTML and return HTML: <tt>NodeSeq =&gt; NodeSeq</tt>. Because Lift’s snippet resolution mechanism is open and any code referenced in Boot (See <a class="Reference" href="index-7.4.html#sec:Boot">↑</a>), any code can be a Lift “module” by virtue of registering its snippets and other resources in <tt>LiftRules</tt>. Many Lift modules already exist including PayPal, OAuth, OpenID, LDAP, and even a module containing many jQuery widgets.
+</div>
+<div class="Standard">
+The most difficult issue relating to integration of external modules into Lift is how to properly insert the module’s menu items into a SiteMap (See <a class="Reference" href="index-3.2.html#sec:SiteMap-1">↑</a>) menu hierarchy. Lift 2.2 introduces a more flexible mechanism for mutating the <tt>SiteMap</tt>: <tt>SiteMap</tt> mutators. <tt>SiteMap</tt> mutators are functions that rewrite the SiteMap based on rules for where to insert the module’s menus in the menu hierarchy. Each module may publish markers. For example, here are the markers for ProtoUser:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">/**
+* Insert this LocParam into your menu if you want the
+* User’s menu items to be inserted at the same level
+* and after the item
+*/
+final case object AddUserMenusAfter extends Loc.LocParam[Any]
+/**
+* replace the menu that has this LocParam with the User’s menu
+* items
+*/
+final case object AddUserMenusHere extends Loc.LocParam[Any]
+/**
+* Insert this LocParam into your menu if you want the
+* User’s menu items to be children of that menu
+*/
+final case object AddUserMenusUnder extends Loc.LocParam[Any]
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+The module also makes a <tt>SiteMap</tt> mutator available, this can either be returned from the module’s <tt>init</tt> method or via some other method on the module. ProtoUser makes the <tt>sitemapMutator</tt> method available which returns a <tt>SiteMap =&gt; SiteMap</tt>.
+</div>
+<div class="Standard">
+The application can add the marker to the appropriate menu item:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">Menu("Home") / "index" &gt;&gt; User.AddUserMenusAfter
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And when the application registers the <tt>SiteMap</tt> with <tt>LiftRules</tt>, it applies the mutator:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">LiftRules.setSiteMapFunc(() =&gt; User.sitemapMutator(sitemap()))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Because the mutators are composable:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">val allMutators = User.sitemapMutator andThen FruitBat.sitemapMutator
+LiftRules.setSiteMapFunc(() =&gt; allMutators(sitemap()))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+For each module, the implementation of the mutators is pretty simple:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">  private lazy val AfterUnapply = SiteMap.buildMenuMatcher(_ == AddUserMenusAfter)
+  private lazy val HereUnapply = SiteMap.buildMenuMatcher(_ == AddUserMenusHere)
+  private lazy val UnderUnapply = SiteMap.buildMenuMatcher(_ == AddUserMenusUnder)
+​
+  /**
+   * The SiteMap mutator function
+   */
+  def sitemapMutator: SiteMap =&gt; SiteMap = SiteMap.sitemapMutator {
+    case AfterUnapply(menu) =&gt; menu :: sitemap
+    case HereUnapply(_) =&gt; sitemap
+    case UnderUnapply(menu) =&gt; List(menu.rebuild(_ ::: sitemap))
+  }(SiteMap.addMenusAtEndMutator(sitemap))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+We’ve defined some extractors that help with pattern matching. <tt>SiteMap.buildMenuMatcher</tt> is a helper method to make building the extractors super-simple. Then we supply a <tt>PartialFunction[Menu, List[Menu]]</tt> which looks for the marker <tt>LocParam</tt> and re-writes the menu based on the marker. If there are no matches, the additional rule is fired, in this case, we append the menus at the end of the <tt>SiteMap</tt>.
+</div>
+<div class="Standard">
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-8.2.html#Next">Previous: Section 8.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-8.html">Up: Chapter 8</a></span>
+<span class="next"><a class="next" name="Next" href="index-8.4.html#prev">Next: Section 8.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

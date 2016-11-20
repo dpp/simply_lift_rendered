@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-12.html#Next">Previous: Chapter 12</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.1.html#prev">Next: Section 13.1</a></span>
+</div>
+<h1 class="Chapter">
+<a class="toc" name="toc-Chapter-13">13</a> <a class="Label" name="cha:From-MVC"> </a>From MVC
+</h1>
+<div class="Standard">
+Okay, so you’re coming from MVC-land and you’re used to defining routes, defining controlers and defining views.
+</div>
+<div class="Standard">
+Lift is different. For HTML requests, Lift loads the view first and builds your page from the view. Lift also supports REST style requests for non-HTML data. (See <a class="Reference" href="index-Chapter-11.html#cha:REST">11 on page 1↑</a>)
+</div>
+<div class="Standard">
+“Why?” Because complex HTML pages rarely contain a dominant piece of logic... a single controller... but contain many different components. Some of those components interact and some do not. In Lift, you define the collection of components to be rendered in the resulting HTML page in the view.
+</div>
+<div class="Standard">
+So, to create a page that has dynamic content, we need to do three things:
+</div>
+<ul>
+<li>
+Make a SiteMap entry for the page
+</li>
+<li>
+Create the view (the HTML)
+</li>
+<li>
+Create the behavior (the Snippet that transforms the incoming HTML to the dynamically generated HTML)
+</li>
+
+</ul>
+<div class="Standard">
+You can find the source for this project at <a class="URL" href="https://github.com/dpp/simply_lift/tree/master/samples/from_mvc">https://github.com/dpp/simply_lift/tree/master/samples/from_mvc</a>.
+</div>
+<div class="fulltoc">
+<div class="tocheader">
+Contents for Chapter 13
+</div>
+<div class="tocindent">
+<div class="tocindent">
+<div class="toc">
+<a class="Link" href="index-13.1.html#toc-Section-13.1">Section 13.1: First things first</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.2.html#toc-Section-13.2">Section 13.2: Making a <tt>SiteMap</tt> entry</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.3.html#toc-Section-13.3">Section 13.3: Creating the view</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.4.html#toc-Section-13.4">Section 13.4: Creating the Snippet</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.5.html#toc-Section-13.5">Section 13.5: Getting Ajaxy</a>
+</div>
+<div class="toc">
+<a class="Link" href="index-13.6.html#toc-Section-13.6">Section 13.6: Next Steps</a>
+</div>
+</div>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-12.html#Next">Previous: Chapter 12</a></span>
+<span class="up"><a class="up" href="index-Part-I.html">Up: Part I</a></span>
+<span class="next"><a class="next" name="Next" href="index-13.1.html#prev">Next: Section 13.1</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.1.html#Next">Previous: Section 2.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.3.html#prev">Next: Section 2.3</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-2.2">2.2</a> The Chat Comet component
+</h2>
+<div class="Standard">
+The <a class="URL" href="http://en.wikipedia.org/wiki/Actor_model">Actor Model</a> provides state in functional languages include Erlang. Lift has an Actor library and LiftActors (see <a class="Reference" href="index-7.14.html#sec:LiftActor">7.14↓</a>) provides a powerful state and concurrency model. This may all seem abstract, so let’s look at the <tt>Chat</tt> class.
+</div>
+<div class="Standard">
+
+</div>
+<div class="listing">
+<div class="caption">
+Chat.scala
+</div>
+<pre class="listing brush: scala">package code
+package comet
+​
+import net.liftweb._
+import http._
+import util._
+import Helpers._
+​
+/**
+ * The screen real estate on the browser will be represented
+ * by this component.  When the component changes on the server
+ * the changes are automatically reflected in the browser.
+ */
+class Chat extends CometActor with CometListener {
+  private var msgs: Vector[String] = Vector() // private state
+​
+  /**
+   * When the component is instantiated, register as
+   * a listener with the ChatServer
+   */
+  def registerWith = ChatServer
+​
+  /**
+   * The CometActor is an Actor, so it processes messages.
+   * In this case, we're listening for Vector[String],
+   * and when we get one, update our private state
+   * and reRender() the component.  reRender() will
+   * cause changes to be sent to the browser.
+   */
+  override def lowPriority = {
+    case v: Vector[String] => msgs = v; reRender()
+  }
+​
+  /**
+   * Put the messages in the li elements and clear
+   * any elements that have the clearable class.
+   */
+  def render = "li *" #> msgs & ClearClearable
+}
+</pre>
+</div>
+<div class="Standard">
+The <tt>Chat</tt> component has private state, registers with the <tt>ChatServer</tt>, handles incoming messages and can render itself. Let’s look at each of those pieces.
+</div>
+<div class="Standard">
+The private state, like any private state in prototypical object oriented code, is the state that defines the object’s behavior.
+</div>
+<div class="Standard">
+registerWith is a method that defines what component to register the Chat component with. Registration is a part of the Listener (or <a class="URL" href="http://en.wikipedia.org/wiki/Observer_pattern">Observer</a>) pattern. We’ll look at the definition of the <tt>ChatServer</tt> in a minute.
+</div>
+<div class="Standard">
+The <tt>lowPriority</tt> method defines how to process incoming messages. In this case, we’re Pattern Matching (see <a class="Reference" href="index-7.15.html#sec:Pattern-Matching">↓</a>) the incoming message and if it’s a <tt>Vector[String]</tt>, then we perform the action of setting our local state to the <tt>Vector</tt> and re-rendering the component. The re-rendering will force the changes out to any browser that is displaying the component.
+</div>
+<div class="Standard">
+We define how to <tt>render</tt> the component by defining the CSS to match and the replacement (See <a class="Reference" href="index-7.10.html#sec:CSS-Selector-Transforms">↓</a>). We match all the <tt>&lt;li&gt;</tt> tags of the template and for each message, create an <tt>&lt;li&gt;</tt> tag with the child nodes set to the message. Additionally, we clear all the elements that have the <tt>clearable</tt> in the <tt>class</tt> attribute.
+</div>
+<div class="Standard">
+That’s it for the Chat CometActor component.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-2.1.html#Next">Previous: Section 2.1</a></span>
+<span class="up"><a class="up" href="index-Chapter-2.html">Up: Chapter 2</a></span>
+<span class="next"><a class="next" name="Next" href="index-2.3.html#prev">Next: Section 2.3</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.2.html#Next">Previous: Section 4.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.4.html#prev">Next: Section 4.4</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.3">4.3</a> Stateful Snippets
+</h2>
+<div class="Standard">
+In order for us to give the user a better experience, we need to capture the state of the name and age variables across the multiple form submissions. The mechanism that Lift has for doing this is the Stateful Snippet<span class="FootOuter"><span class="SupFootMarker"> [D] </span><span class="HoverFoot"><span class="SupFootMarker"> [D] </span>There are no stateless snippets. A Stateful Snippet doesn’t consume any more server-side resources than does a form composed via <tt>SHtml.onSubmit()</tt>. Oh, and state is not a barier to scalaing. See <a class="Reference" href="index-Chapter-20.html#cha:Scaling">↓</a>.</span></span>. A snippet that subclasses <tt>StatefulSnippet</tt> has an extra hidden parameter automatically inserted into the form which ensures that during processing of that form, the same instance of the StatefulSnippet will be used<span class="FootOuter"><span class="SupFootMarker"> [E] </span><span class="HoverFoot"><span class="SupFootMarker"> [E] </span>Earlier I talked about the security implications of hidden form parameters. The hidden parameter mechanism is not vulnerable to the same issues because the hidden parameter itself is just a GUID that causes a function to be invoked on the server. No state is exposed to the client, so there’s nothing for a hacker to capture or mutate that would allow for the exploitation of a vulnerability.</span></span>.
+</div>
+<div class="Standard">
+Let’s look at the HTML template:
+</div>
+<div class="listing">
+<div class="caption">
+stateful.html
+</div>
+<pre class="listing brush: xml">&lt;div id="main" class="lift:surround?with=default&at=content">
+  &lt;div>
+    Using stateful snippets for a better
+    user experience
+  &lt;/div>
+      
+  &lt;div>
+    &lt;div class="lift:Stateful?form=post">
+      Name: &lt;input name="name">&lt;br>
+      Age: &lt;input name="age" value="0">&lt;br>
+      &lt;input type="submit" value="Submit">
+    &lt;/div>
+  &lt;/div>
+&lt;/div>
+​
+</pre>
+</div>
+<div class="Standard">
+The template looks pretty much like the template in <tt>onsubmit.html</tt>. Let’s look at the snippet itself:
+</div>
+<div class="listing">
+<div class="caption">
+Stateful.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import common._
+import util.Helpers._
+import scala.xml.NodeSeq
+​
+/**
+ * A stateful snippet. The state associated with this
+ * snippet is in instance variables 
+ */
+class Stateful extends StatefulSnippet {
+  // state unique to this instance of the stateful snippet
+  private var name = ""
+  private var age = "0"
+​
+  // capture from whence the user came so we
+  // can send them back
+  private val whence = S.referer openOr "/"
+​
+  // StatefulSnippet requires an explicit dispatch
+  // to the method.
+  def dispatch = {case "render" => render}
+​
+  // associate behavior with each HTML element
+  def render = 
+    "name=name" #> SHtml.text(name, name = _, "id" -> "the_name") &
+    "name=age" #> SHtml.text(age, age = _) &
+    "type=submit" #> SHtml.onSubmitUnit(process)
+​
+  // process the form
+  private def process() =
+    asInt(age) match {
+      case Full(a) if a < 13 => S.error("Too young!")
+      case Full(a) => {
+        S.notice("Name: "+name)
+        S.notice("Age: "+a)
+        S.redirectTo(whence)
+      }
+      
+      case _ => S.error("Age doesn't parse as a number")
+    }
+}
+</pre>
+</div>
+<div class="Standard">
+There’s a fair amount different here. First, the class definition: <tt>class Stateful extends StatefulSnippet</tt>. Because the snippet instance itself contains state, it can’t be an object singleton. It must be declared as a class so there are multiple instances.
+</div>
+<div class="Standard">
+We capture state (<tt>name</tt>, <tt>age</tt> and <tt>from</tt> whence the user came), in instance variables.
+</div>
+<div class="Standard">
+<tt>StatefulSnippet</tt>s require a <tt>dispatch</tt> method which does method dispatching explicitly rather than “by-convention.”
+</div>
+<div class="Standard">
+The render method uses familiar CSS Selector Transforms to associate markup with behavior. However, rather than using <tt>SHtml.onSubmit</tt>, we’re using <tt>SHtml.text</tt> to explicitly generate an HTML <tt>&lt;input&gt;</tt> element with both the <tt>name</tt> and <tt>value</tt> attributes set. In the case of the first input, we’re also explicitly setting the <tt>id</tt> attribute. We’re not using it in the application, but it’s a way to demonstrate how to add extra attributes.
+</div>
+<div class="Standard">
+Finally, the <tt>process()</tt> method attempts to covert the age <tt>String</tt> into an <tt>Int</tt>. If it’s an <tt>Int</tt>, but less than 13, we present an error. If the <tt>String</tt> cannot be parsed to an <tt>Int</tt>, we present an error, otherwise we do notify the user and go back to the page the user came from.
+</div>
+<div class="Standard">
+Note in this example, we preserve the form values, so if you type something wrong in the <tt>name</tt> or <tt>age</tt> fields, what you typed is presented to you again.
+</div>
+<div class="Standard">
+The big difference between the resulting HTML for <tt>StatefulSnippet</tt>s and other snippets is the insertion of <tt>&lt;input name="F1071441222401LO3" type="hidden" value="true"&gt;</tt> in the form. This hidden field associates the snippet named “Stateful” with the instance of <tt>Stateful</tt> that was used to initially generate the form.
+</div>
+<div class="Standard">
+Let’s look at an alternative mechanism for creating a nice user experience.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.2.html#Next">Previous: Section 4.2</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.4.html#prev">Next: Section 4.4</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

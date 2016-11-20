@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-3.html#Next">Previous: Chapter 3</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.2.html#prev">Next: Section 3.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-3.1">3.1</a> Starting at the beginning: <tt>Boot.scala</tt>
+</h2>
+<div class="Standard">
+When your Lift application first starts up, it executes the code in Boot.scala:
+</div>
+<div class="listing">
+<div class="caption">
+Boot.scala
+</div>
+<pre class="listing brush: scala">package bootstrap.liftweb
+​
+import net.liftweb._
+import util._
+import Helpers._
+​
+import common._
+import http._
+import sitemap._
+import Loc._
+​
+import code.snippet._
+​
+/**
+ * A class that's instantiated early and run.  It allows the application
+ * to modify lift's environment
+ */
+class Boot {
+  /**
+   * Calculate if the page should be displayed.
+   * In this case, it will be visible every other minute
+   */
+  def displaySometimes_? : Boolean = 
+    (millis / 1000L / 60L) % 2 == 0
+​
+  def boot {
+    // where to search snippet
+    LiftRules.addToPackages("code")
+​
+    // Build SiteMap
+    def sitemap(): SiteMap = SiteMap(
+      Menu.i("Home") / "index", // the simple way to declare a menu
+​
+      Menu.i("Sometimes") / "sometimes" >> If(displaySometimes_? _,
+                                            S ? "Can't view now"), 
+​
+      // A menu with submenus
+      Menu.i("Info") / "info" submenus(
+        Menu.i("About") / "about" >> Hidden >> LocGroup("bottom"),
+        Menu.i("Contact") / "contact",
+        Menu.i("Feedback") / "feedback" >> LocGroup("bottom")
+      ),
+      
+​
+      Menu.i("Sitemap") / "sitemap" >> Hidden >> LocGroup("bottom"),
+​
+      Menu.i("Dynamic") / "dynamic", // a page with dynamic content
+​
+      Param.menu,
+​
+      Menu.param[Which]("Recurse", "Recurse",
+                        {case "one" => Full(First())
+                         case "two" => Full(Second())
+                         case "both" => Full(Both())
+                         case _ => Empty},
+                        w => w.toString) / "recurse",
+      
+      // more complex because this menu allows anything in the
+      // /static path to be visible
+      Menu.i("Static") / "static" / **)
+​
+    // set the sitemap.  Note if you don't want access control for
+    // each page, just comment this line out.
+    LiftRules.setSiteMapFunc(() => sitemap())
+​
+    //Show the spinny image when an Ajax call starts
+    LiftRules.ajaxStart =
+      Full(() => LiftRules.jsArtifacts.show("ajax-loader").cmd)
+    
+    // Make the spinny image go away when it ends
+    LiftRules.ajaxEnd =
+      Full(() => LiftRules.jsArtifacts.hide("ajax-loader").cmd)
+​
+    // Force the request to be UTF-8
+    LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
+​
+    // Use HTML5 for rendering
+    LiftRules.htmlProperties.default.set((r: Req) =>
+      new Html5Properties(r.userAgent))    
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+Rather than keeping configuration parameters in XML files, Lift keeps configuration parameters in code in <tt>Boot</tt>. Boot is executed once when the servlet container loads the Lift application. You can change many of Lift’s execution rules in the <tt>LiftRules</tt> singleton during boot, but after boot, these parameters are frozen.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.1.1">3.1.1</a> <tt>LiftRules</tt> rules
+</h3>
+<div class="Standard">
+Most of the configuration parameters that define how Lift will convert an HTTP request into a response are contained in the <tt>LiftRules</tt> singleton. Some of the parameters for <tt>LiftRules</tt> are used commonly and some are very infrequently changed from their default. LiftRules can be changed during boot, but not at other times. So, set all your configuration in boot (or in methods that are called from boot).
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.1.2">3.1.2</a> Properties and Run modes
+</h3>
+<div class="Standard">
+While many properties for your running application can be defined in <tt>Boot.scala</tt>, there are some properties that are best defined in a text file. Lift supports multiple properties files per project. The properties files are loaded based on the user, machine and run mode.
+</div>
+<div class="Standard">
+If you want to provide a configuration file for a subset of your application or for a specific environment, Lift expects configuration files to be named in a manner relating to the context in which they are being used. The standard name format is:
+</div>
+<div class="Standard">
+<tt>modeName.userName.hostName.props</tt>
+</div>
+<div class="Standard">
+examples:<tt><br/>
+dpp.yak.props<br/>
+test.dpp.yak.props<br/>
+production.moose.props<br/>
+staging.dpp.props<br/>
+test.default.props<br/>
+default.props</tt>
+</div>
+<div class="Standard">
+with hostName and userName being optional, and modeName being one of "test", "staging", "production", "pilot", "profile", or blank (for development mode). The standard Lift properties file extension is "props".
+</div>
+<div class="Standard">
+Place properties files in the <tt>src/main/resources/props</tt> directory in your project and they will be packaged up as part of the build process.
+</div>
+<div class="Standard">
+When you’re developing your Lift application, the run mode (see <tt>net.liftweb.util.Props.mode</tt>) will be <tt>Development</tt>. When you deploy your application, pass <tt>-Drun.mode=production</tt> to your web container. In production mode, Lift aggressively caches templates, snippet classes, etc.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.1.3">3.1.3</a> By convention
+</h3>
+<div class="Standard">
+Lift, like Rails, will look for items in certain locations by convention. For example, Lift will look for classes that implement snippets in the <tt>xxx.snippet</tt> package where the xxx part is the main package for your application. You define one or more packages for Lift to look in with:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // where to search snippet
+    LiftRules.addToPackages("code")
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Here, we’ve added the <tt>code</tt> package to the list of packages that Lift will search through. You can also do <tt>LiftRules.addToPackages("com.fruitbat.mydivision.myapplication")</tt>.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.1.4">3.1.4</a> Misc Rules
+</h3>
+<div class="Standard">
+We’ll skip the sitemap definition until the next section. This rule defines how to show a spinning icon during Ajax calls (Lift will automatically show the spinning icon if this function is enabled):
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    //Show the spinny image when an Ajax call starts
+    LiftRules.ajaxStart =
+      Full(() =&gt; LiftRules.jsArtifacts.show("ajax-loader").cmd)
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+And this rule sets the default character encoding to UTF-8 rather than the default platform encoding:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // Force the request to be UTF-8
+    LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+Okay... you get the idea... there are plenty of parameters to tune during boot.
+</div>
+<h3 class="Subsection">
+<a class="toc" name="toc-Subsection-3.1.5">3.1.5</a> Html5
+</h3>
+<div class="Standard">
+Prior to Lift 2.2, Lift treated all templates as XHTML and emitted XHTML to the browser. When the Lift project started in early 2007, this seemed like a Really Good Idea™. Turns out the world has not adopted XHTML and some JavaScript libraries, e.g. Google Maps, doesn’t work on XHTML pages. Lift 2.2 introduced optional Html5 support both in the parser (so it could read Html5 templates rather than requiring well formed XML in templates) and emits Html5 to the browser. Lift still processes pages as Scala <tt>NodeSeq</tt> elements, so no changes are required to the application.
+</div>
+<div class="Standard">
+In order to keep Lift 2.2 apps backward compatible with Lift’s XHTML support, by default the XHTML parser/serializer are used. However, it’s recommended to use the Html5 support which can be turned on in boot with:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing brush: scala">    // Use HTML5 for rendering
+    LiftRules.htmlProperties.default.set((r: Req) =&gt;
+      new Html5Properties(r.userAgent))  
+</pre>
+</div>
+
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-3.html#Next">Previous: Chapter 3</a></span>
+<span class="up"><a class="up" href="index-Chapter-3.html">Up: Chapter 3</a></span>
+<span class="next"><a class="next" name="Next" href="index-3.2.html#prev">Next: Section 3.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

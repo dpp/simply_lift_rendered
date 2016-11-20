@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-17.html#Next">Previous: Chapter 17</a></span>
+<span class="up"><a class="up" href="index-Chapter-17.html">Up: Chapter 17</a></span>
+<span class="next"><a class="next" name="Next" href="index-17.2.html#prev">Next: Section 17.2</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-17.1">17.1</a> Problem
+</h2>
+<div class="Standard">
+I want to expose part of my site as authenticated REST, but with custom authentication (not the HTTP based authentication).
+</div>
+<div class="Standard">
+Right now, I’m thinking of using a custom dispatch, but that means I’ll have to check every request in the request handler itself to see if it is authenticated, right?
+</div>
+<div class="Standard">
+Authentication is just a SessionVar on the server, so it also implies I need a way to pass the session identifier back and forth between the REST client and the service. If it were a cookie I think it would be transparent, but I think Lift adds te session ids to the URLs (at least that’s what I see in my address bar).
+</div>
+<div class="Standard">
+So, assuming I have a public "login" REST call that sets a SessionVar, how do I pass this transarently to the REST client? I have thought about a token system as well, but that seems like copying the session system.
+</div>
+<div class="Standard">
+Any suggestions? 
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-Chapter-17.html#Next">Previous: Chapter 17</a></span>
+<span class="up"><a class="up" href="index-Chapter-17.html">Up: Chapter 17</a></span>
+<span class="next"><a class="next" name="Next" href="index-17.2.html#prev">Next: Section 17.2</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>

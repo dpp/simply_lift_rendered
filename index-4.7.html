@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">  <head>    <title>      Simply Lift    </title>    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />    <!-- scripts for highlighter -->    <script type="text/javascript" src="scripts/shCore.js"></script>    <script type="text/javascript" src="scripts/shBrushXml.js"></script>    <script type="text/javascript" src="scripts/shBrushScala.js"></script>    <script type="text/javascript" src="scripts/shBrushBash.js"></script>    <!-- CSS for highlighter -->    <link href="css/shCore.css" rel="stylesheet" type="text/css" />    <link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />    <link rel="stylesheet" href="css/lyx.css" type="text/css" media="screen"/>  </head>  <body>    <div id="globalWrapper">      <div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.6.html#Next">Previous: Section 4.6</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.8.html#prev">Next: Section 4.8</a></span>
+</div>
+<h2 class="Section">
+<a class="toc" name="toc-Section-4.7">4.7</a> <tt>Wizard</tt>
+</h2>
+<div class="Standard">
+<tt>LiftScreen</tt> is great for single screen applications. If you’ve got input and validation that requires multiple screens, Wizard is what you want. We’ll skip the markup ’cause it’s just a snippet invocation. Here’s the wizard code:
+</div>
+<div class="listing">
+<div class="caption">
+WizardExample.scala
+</div>
+<pre class="listing brush: scala">package code
+package snippet
+​
+import net.liftweb._
+import http._
+import wizard._
+import util._
+​
+/**
+ * Define the multi-page input screen
+ */
+object WizardExample extends Wizard {
+​
+  // define the first screen
+  val screen1 = new Screen {
+    val name = field("Name", "")
+    val age = field("Age", 0, minVal(13, "Too Young"))
+  }
+​
+  // define the second screen
+  val screen2 = new Screen {
+​
+    // a radio button
+    val rad = radio("Radio", "Red", List("Red", "Green", "Blue"))
+​
+    // a select
+    val sel = select("Select", "Archer", List("Elwood", "Archer", "Madeline"))
+​
+    // want a text area... yeah, we got that
+    val ta = textarea("Text Area", "")
+​
+    // here are password inputs with minimum lenght
+    val pwd1 = password("Password", "", valMinLen(6, "Password too short"))
+​
+    // and a custom validator
+    val pwd2 = password("Password (re-enter)", "", mustMatch _)
+​
+    // return a List[FieldError]... there's an implicit conversion
+    // from String to List[FieldError] that inserts the field's ID
+    def mustMatch(s: String): List[FieldError] = 
+      if (s != pwd1.is) "Passwords do not match" else Nil
+      
+  }
+​
+  def finish() {
+    S.notice("Name: "+screen1.name)
+    S.notice("Age: "+screen1.age)
+  }
+}
+</pre>
+</div>
+<div class="Standard">
+It’s declarative just like the screen example above. The back button works. You can have multiple wizards active in multiple tabs in your browser and they don’t intefer with each other.
+</div>
+<div class="splitheader">
+<span class="prev"><a class="prev" name="prev" href="index-4.6.html#Next">Previous: Section 4.6</a></span>
+<span class="up"><a class="up" href="index-Chapter-4.html">Up: Chapter 4</a></span>
+<span class="next"><a class="next" name="Next" href="index-4.8.html#prev">Next: Section 4.8</a></span>
+</div>
+          <p class="bottom">(C) 2012 David Pollak</p>    </div>    <script type="text/javascript">SyntaxHighlighter.all()</script>  </body></html>
